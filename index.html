@@ -6,7 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
-/* (Mismo CSS que antes) */
 * {
   box-sizing: border-box;
   font-family: Arial, sans-serif;
@@ -469,44 +468,63 @@ function applyPoints(multiplier) {
   const value = parseInt(pointsInput.value);
   if (!isNaN(value) && currentScoreElement) {
     history.push(saveSnapshot());
-    const newScore = parseInt(currentScoreElement.textContent) + value * multiplier;
+
+    let newScore = parseInt(currentScoreElement.textContent) + value * multiplier;
     currentScoreElement.textContent = newScore;
-    checkSpecialScores(newScore, currentScoreElement);
+
+    // Actualizar ganador si corresponde (el puntaje más bajo gana)
+    if (!gameOver || (gameOver && newScore < parseInt(currentScoreElement.textContent))) {
+      checkWinner();
+    }
+
     saveGame();
   }
   closeModal();
 }
 
-function checkSpecialScores(newScore, scoreElement) {
-  if (newScore <= -51 && !gameOver) {
+function checkWinner() {
+  const scores = document.querySelectorAll(".score");
+  let minScore = 0;
+  let winnerIdx = null;
+
+  scores.forEach((scoreEl, index) => {
+    const val = parseInt(scoreEl.textContent);
+    if (val <= -51 && (winnerIdx === null || val < minScore)) {
+      winnerIdx = index;
+      minScore = val;
+    }
+  });
+
+  if (winnerIdx !== null) {
     gameOver = true;
-    const scores = document.querySelectorAll(".score");
-    winnerIndex = Array.from(scores).findIndex((el) => el === scoreElement);
+    winnerIndex = winnerIdx;
     renderPlayers();
-    return;
-  }
-
-  if (newScore >= 101) {
-    if (reingresoOverlay.style.display === "flex") return;
-
-    const players = document.querySelectorAll(".player");
-    winnerIndex = null;
-    gameOver = false;
-
-    reingresoJugadorIndex = Array.from(players).findIndex((player) => {
-      return player.querySelector(".score") === scoreElement;
-    });
-
-    if (reingresoJugadorIndex === -1) return;
-
-    reingresoMensaje.textContent = `El jugador "${players[reingresoJugadorIndex].querySelector(".name-zone input").value}" alcanzó ${newScore} puntos. ¿Quieres que vuelva a entrar?`;
-    reingresoOverlay.style.display = "flex";
   }
 }
 
+function closeModal() {
+  modal.style.display = "none";
+  applyPointsForReingreso = null;
+
+  // Restaurar eventos normales a botones modal
+  const buttons = modal.querySelectorAll(".modal-buttons button");
+  buttons[0].onclick = () => applyPoints(1);
+  buttons[1].onclick = () => applyPoints(-1);
+
+  pointsInput.placeholder = "Puntos";
+}
+
+modal.onclick = (e) => {
+  if (e.target === modal) closeModal();
+};
+
 function handleReingreso(decision) {
   const players = document.querySelectorAll(".player");
-  if (reingresoJugadorIndex === null || reingresoJugadorIndex < 0 || reingresoJugadorIndex >= players.length) {
+  if (
+    reingresoJugadorIndex === null ||
+    reingresoJugadorIndex < 0 ||
+    reingresoJugadorIndex >= players.length
+  ) {
     reingresoOverlay.style.display = "none";
     return;
   }
@@ -588,20 +606,6 @@ function checkWinnerAfterReingreso() {
   });
 }
 
-function closeModal() {
-  modal.style.display = "none";
-  applyPointsForReingreso = null; // limpieza para no bloquear después
-  // Restaurar eventos normales a botones modal
-  const buttons = modal.querySelectorAll(".modal-buttons button");
-  buttons[0].onclick = () => applyPoints(1);
-  buttons[1].onclick = () => applyPoints(-1);
-  pointsInput.placeholder = "Puntos";
-}
-
-modal.onclick = (e) => {
-  if (e.target === modal) closeModal();
-};
-
 selector.onchange = () => {
   if (confirm("Cambiar la cantidad de jugadores reiniciará el juego. ¿Deseas continuar?")) {
     gameOver = false;
@@ -638,13 +642,6 @@ function updatePlayButtonState(active) {
   }
 }
 
-btnPlay.onclick = () => {
-  saveGame();
-  updatePlayButtonState(false);
-  namesEdited = false;
-  alert("¡A jugar!");
-};
-
 function onPlayClick() {
   if (namesEdited) {
     saveGame();
@@ -652,18 +649,6 @@ function onPlayClick() {
     namesEdited = false;
     alert("¡A jugar!");
   }
-}
-
-function checkWinner() {
-  const scores = document.querySelectorAll(".score");
-  scores.forEach((scoreEl, index) => {
-    const value = parseInt(scoreEl.textContent);
-    if (value <= -51 && !gameOver) {
-      gameOver = true;
-      winnerIndex = index;
-      renderPlayers();
-    }
-  });
 }
 
 renderPlayers();
