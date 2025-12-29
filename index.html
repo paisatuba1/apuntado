@@ -179,33 +179,48 @@
     inset: 0;
     background: rgba(0, 0, 0, 0.75);
     color: #fff;
-    font-size: 22px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #c27c1f; /* mostaza quemado */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 14px;
     border-radius: 6px;
     z-index: 10;
   }
 
   .enter-buttons {
     display: flex;
-    gap: 10px;
+    gap: 14px;
   }
 
   .enter-buttons button {
-    padding: 8px 14px;
+    padding: 10px 20px;
     border-radius: 6px;
-    border: 1px solid #555;
-    background: #222;
-    color: #fff;
-    cursor: pointer;
+    border: none;
     font-weight: bold;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.3s;
+    color: #fff;
   }
 
-  .enter-buttons button:hover {
-    background: #444;
+  .enter-buttons button.btn-yes {
+    background-color: #1e3a8a; /* azul opaco */
+  }
+
+  .enter-buttons button.btn-no {
+    background-color: #8b1e1e; /* rojo opaco */
+  }
+
+  .enter-buttons button.confirmed {
+    opacity: 1;
+  }
+
+  .enter-buttons button:hover:not(.confirmed) {
+    opacity: 0.85;
   }
 </style>
 </head>
@@ -331,7 +346,12 @@
         `;
 
         // Manejar clicks de botones
-        overlay.querySelector(".btn-yes").onclick = () => {
+        const btnYes = overlay.querySelector(".btn-yes");
+        const btnNo = overlay.querySelector(".btn-no");
+
+        btnYes.onclick = () => {
+          btnYes.classList.add("confirmed");
+          btnNo.classList.remove("confirmed");
           // Ajustar puntaje al máximo de jugadores activos
           const maxActive = activeScores.length > 0 ? Math.max(...activeScores) : 0;
           updatePlayerScore(i, maxActive);
@@ -339,7 +359,9 @@
           renderPlayers();
         };
 
-        overlay.querySelector(".btn-no").onclick = () => {
+        btnNo.onclick = () => {
+          btnNo.classList.add("confirmed");
+          btnYes.classList.remove("confirmed");
           playersPendingEntry.delete(i);
           // Jugador se queda fuera, bloqueado para siempre (o hasta reiniciar)
           renderPlayers();
