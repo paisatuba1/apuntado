@@ -4,9 +4,135 @@
   <meta charset="UTF-8">
   <title>APUNTADO</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #000;
+      color: #fff;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Fondo con pintas */
+    body::before {
+      content: "♠ ♥ ♦ ♣";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 200%;
+      height: 200%;
+      font-size: 80px;
+      color: rgba(0,255,0,0.08);
+      transform: rotate(-30deg);
+      pointer-events: none;
+    }
+
+    header {
+      text-align: center;
+      padding: 10px;
+      position: relative;
+      z-index: 2;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      letter-spacing: 4px;
+    }
+
+    .btn-reglas {
+      position: absolute;
+      right: 15px;
+      top: 15px;
+      padding: 6px 12px;
+      background: transparent;
+      border: 1px solid #0f0;
+      color: #0f0;
+      cursor: pointer;
+    }
+
+    /* Contenedor jugadores */
+    .jugadores {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      height: calc(100vh - 70px);
+      gap: 8px;
+      padding: 8px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .jugador {
+      border: 2px solid #f00;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 10px;
+      background: rgba(0,0,0,0.7);
+    }
+
+    .nombre {
+      font-size: 1.1rem;
+      border-bottom: 1px solid #0f0;
+      padding-bottom: 5px;
+      outline: none;
+    }
+
+    .puntaje {
+      font-size: 3rem;
+      text-align: center;
+      color: #0f0;
+    }
+  </style>
 </head>
+
 <body>
-  <h1>APUNTADO 🃏</h1>
-  <p>Control de puntaje para juegos de cartas</p>
+
+  <header>
+    <h1>APUNTADO</h1>
+    <button class="btn-reglas">Reglas</button>
+  </header>
+
+  <main class="jugadores">
+
+    <div class="jugador">
+      <div class="nombre" contenteditable="true">Jugador 1</div>
+      <div class="puntaje">0</div>
+    </div>
+
+    <div class="jugador">
+      <div class="nombre" contenteditable="true">Jugador 2</div>
+      <div class="puntaje">0</div>
+    </div>
+
+    <div class="jugador">
+      <div class="nombre" contenteditable="true">Jugador 3</div>
+      <div class="puntaje">0</div>
+    </div>
+
+    <div class="jugador">
+      <div class="nombre" contenteditable="true">Jugador 4</div>
+      <div class="puntaje">0</div>
+    </div>
+
+    <div class="jugador">
+      <div class="nombre" contenteditable="true">Jugador 5</div>
+      <div class="puntaje">0</div>
+    </div>
+
+    <div class="jugador">
+      <div class="nombre" contenteditable="true">Jugador 6</div>
+      <div class="puntaje">0</div>
+    </div>
+
+  </main>
+
 </body>
 </html>
