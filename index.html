@@ -32,6 +32,7 @@ h1 {
   display: flex;
   justify-content: center;
   gap: 10px;
+  flex-wrap: wrap;
   margin-bottom: 10px;
 }
 
@@ -52,7 +53,7 @@ button {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  height: calc(100vh - 130px);
+  height: calc(100vh - 190px);
 }
 
 .player {
@@ -60,10 +61,6 @@ button {
   padding: 10px;
   display: flex;
   flex-direction: column;
-}
-
-.name-zone {
-  padding-bottom: 10px;
 }
 
 .name-zone input {
@@ -76,14 +73,12 @@ button {
   outline: none;
 }
 
-/* Línea divisoria sutil */
 .divider {
   height: 1px;
   background: #333;
-  margin: 5px 0;
+  margin: 8px 0;
 }
 
-/* Zona de puntaje */
 .score-zone {
   flex: 1;
   display: flex;
@@ -97,14 +92,19 @@ button {
   font-weight: bold;
 }
 
+/* CONTROLES INFERIORES */
+.bottom-controls {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 10px;
+}
+
 /* MODAL */
 .modal {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.8);
+  inset: 0;
+  background: rgba(0,0,0,0.85);
   display: none;
   align-items: center;
   justify-content: center;
@@ -115,8 +115,8 @@ button {
   padding: 20px;
   border-radius: 10px;
   text-align: center;
-  width: 80%;
-  max-width: 300px;
+  width: 85%;
+  max-width: 320px;
 }
 
 .modal-content input {
@@ -132,13 +132,11 @@ button {
 
 .modal-buttons {
   display: flex;
-  justify-content: space-between;
   gap: 10px;
 }
 
 .modal-buttons button {
   flex: 1;
-  font-size: 20px;
 }
 </style>
 </head>
@@ -153,80 +151,149 @@ button {
       <option value="3">3 jugadores</option>
       <option value="4">4 jugadores</option>
       <option value="5">5 jugadores</option>
-      <option value="6" selected>6 jugadores</option>
+      <option value="6">6 jugadores</option>
     </select>
     <button onclick="showRules()">Reglas</button>
+    <button onclick="saveGame()">JUGAR</button>
   </div>
 </header>
 
 <div class="players" id="players"></div>
 
+<div class="bottom-controls">
+  <button onclick="undoLast()">DESHACER</button>
+  <button onclick="confirmReset()">REINICIAR</button>
+</div>
+
 <!-- MODAL -->
 <div class="modal" id="modal">
-  <div class="modal-content">
-    <input type="number" id="pointsInput" placeholder="Puntos">
-    <div class="modal-buttons">
-      <button onclick="addPoints()">+ Sumar</button>
-      <button onclick="subtractPoints()">− Restar</button>
-    </div>
-  </div>
+  <div class="modal-content" id="modalContent"></div>
 </div>
 
 <script>
 const playersContainer = document.getElementById("players");
 const selector = document.getElementById("playerCount");
 const modal = document.getElementById("modal");
-const pointsInput = document.getElementById("pointsInput");
+const modalContent = document.getElementById("modalContent");
 
 let currentScoreElement = null;
+let history = [];
 
 function renderPlayers() {
   playersContainer.innerHTML = "";
+
+  const saved = localStorage.getItem("apuntadoGame");
+  const savedData = saved ? JSON.parse(saved) : null;
+
+  if (savedData) selector.value = savedData.count;
+
   const count = parseInt(selector.value);
 
   for (let i = 1; i <= count; i++) {
-    const div = document.createElement("div");
-    div.className = "player";
+    const player = document.createElement("div");
+    player.className = "player";
 
-    div.innerHTML = `
+    const name = savedData?.players[i-1]?.name || `Jugador ${i}`;
+    const score = savedData?.players[i-1]?.score || 0;
+
+    player.innerHTML = `
       <div class="name-zone">
-        <input value="Jugador ${i}">
+        <input value="${name}">
       </div>
       <div class="divider"></div>
       <div class="score-zone">
-        <div class="score">0</div>
+        <div class="score">${score}</div>
       </div>
     `;
 
-    const scoreZone = div.querySelector(".score-zone");
-    const scoreElement = div.querySelector(".score");
+    const scoreZone = player.querySelector(".score-zone");
+    const scoreElement = player.querySelector(".score");
 
-    scoreZone.addEventListener("click", () => {
-      currentScoreElement = scoreElement;
-      pointsInput.value = "";
-      modal.style.display = "flex";
-      pointsInput.focus();
-    });
+    scoreZone.onclick = () => openPointsModal(scoreElement);
 
-    playersContainer.appendChild(div);
+    playersContainer.appendChild(player);
   }
 }
 
-function addPoints() {
-  const value = parseInt(pointsInput.value);
+function openPointsModal(scoreElement) {
+  currentScoreElement = scoreElement;
+  modalContent.innerHTML = `
+    <input type="number" id="pointsInput" placeholder="Puntos">
+    <div class="modal-buttons">
+      <button onclick="applyPoints(1)">+ Sumar</button>
+      <button onclick="applyPoints(-1)">− Restar</button>
+    </div>
+  `;
+  modal.style.display = "flex";
+}
+
+function applyPoints(multiplier) {
+  const input = document.getElementById("pointsInput");
+  const value = parseInt(input.value);
   if (!isNaN(value)) {
+    history.push(saveSnapshot());
     currentScoreElement.textContent =
-      parseInt(currentScoreElement.textContent) + value;
+      parseInt(currentScoreElement.textContent) + value * multiplier;
   }
   closeModal();
 }
 
-function subtractPoints() {
-  const value = parseInt(pointsInput.value);
-  if (!isNaN(value)) {
-    currentScoreElement.textContent =
-      parseInt(currentScoreElement.textContent) - value;
+function saveGame() {
+  const players = [];
+  document.querySelectorAll(".player").forEach(p => {
+    players.push({
+      name: p.querySelector("input").value,
+      score: p.querySelector(".score").textContent
+    });
+  });
+  localStorage.setItem("apuntadoGame", JSON.stringify({
+    count: selector.value,
+    players
+  }));
+  alert("Partida guardada");
+}
+
+function saveSnapshot() {
+  return localStorage.getItem("apuntadoGame");
+}
+
+function undoLast() {
+  if (history.length === 0) {
+    alert("No hay acciones para deshacer");
+    return;
   }
+  modalContent.innerHTML = `
+    <p>¿Deshacer la última acción?</p>
+    <div class="modal-buttons">
+      <button onclick="closeModal()">Cancelar</button>
+      <button onclick="confirmUndo()">Confirmar</button>
+    </div>
+  `;
+  modal.style.display = "flex";
+}
+
+function confirmUndo() {
+  const last = history.pop();
+  if (last) localStorage.setItem("apuntadoGame", last);
+  renderPlayers();
+  closeModal();
+}
+
+function confirmReset() {
+  modalContent.innerHTML = `
+    <p>¿Seguro que quieres reiniciar el juego?</p>
+    <div class="modal-buttons">
+      <button onclick="closeModal()">Cancelar</button>
+      <button onclick="resetGame()">Reiniciar</button>
+    </div>
+  `;
+  modal.style.display = "flex";
+}
+
+function resetGame() {
+  localStorage.removeItem("apuntadoGame");
+  history = [];
+  renderPlayers();
   closeModal();
 }
 
@@ -234,11 +301,9 @@ function closeModal() {
   modal.style.display = "none";
 }
 
-modal.addEventListener("click", e => {
+modal.onclick = e => {
   if (e.target === modal) closeModal();
-});
-
-selector.addEventListener("change", renderPlayers);
+};
 
 function showRules() {
   alert(
@@ -246,9 +311,11 @@ function showRules() {
     "Juego de cartas donde solo importa el puntaje final.\n\n" +
     "• Toca el nombre para editarlo\n" +
     "• Toca el puntaje para sumar o restar\n" +
-    "• Los puntos se acumulan mano a mano"
+    "• Usa JUGAR para guardar la partida"
   );
 }
+
+selector.onchange = renderPlayers;
 
 renderPlayers();
 </script>
