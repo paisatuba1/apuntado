@@ -181,19 +181,20 @@
     color: #fff;
     font-size: 24px;
     font-weight: bold;
-    color: #c27c1f; /* mostaza quemado */
+    text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 14px;
+    gap: 15px;
     border-radius: 6px;
     z-index: 10;
+    color: #bb8b2e; /* mostaza quemado */
   }
 
   .enter-buttons {
     display: flex;
-    gap: 14px;
+    gap: 20px;
   }
 
   .enter-buttons button {
@@ -201,26 +202,23 @@
     border-radius: 6px;
     border: none;
     font-weight: bold;
-    cursor: pointer;
+    font-size: 18px;
     opacity: 0.6;
-    transition: opacity 0.3s;
-    color: #fff;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+    color: white;
   }
 
   .enter-buttons button.btn-yes {
-    background-color: #1e3a8a; /* azul opaco */
+    background-color: #4569a1; /* azul opaco */
   }
 
   .enter-buttons button.btn-no {
-    background-color: #8b1e1e; /* rojo opaco */
+    background-color: #a14b4b; /* rojo opaco */
   }
 
-  .enter-buttons button.confirmed {
+  .enter-buttons button.active {
     opacity: 1;
-  }
-
-  .enter-buttons button:hover:not(.confirmed) {
-    opacity: 0.85;
   }
 </style>
 </head>
@@ -272,6 +270,9 @@
 
   // Estados de jugadores "fuera" con solicitud de entrada
   let playersPendingEntry = new Set();
+
+  // Para controlar botones SI/NO activados en overlay
+  let activeButtonByPlayer = {};
 
   function renderPlayers() {
     playersContainer.innerHTML = "";
@@ -329,7 +330,7 @@
       `;
 
       // Si está fuera y no ha decidido si vuelve, mostrar overlay con opción para volver a entrar
-      if (isOut) {
+      if (score >= 101) {
         // Hacemos opaco el cuadro
         player.style.opacity = "0.4";
         player.style.pointerEvents = "auto"; // Para que reciba clicks en el overlay
@@ -345,13 +346,26 @@
           </div>
         `;
 
-        // Manejar clicks de botones
+        // Añadir overlay al jugador
+        player.appendChild(overlay);
+
+        // Manejar clicks de botones con efecto opacidad
         const btnYes = overlay.querySelector(".btn-yes");
         const btnNo = overlay.querySelector(".btn-no");
 
+        // Si ya se había seleccionado alguna opción, ponerla activa
+        if (activeButtonByPlayer[i]) {
+          if (activeButtonByPlayer[i] === "yes") btnYes.classList.add("active");
+          if (activeButtonByPlayer[i] === "no") btnNo.classList.add("active");
+        }
+
         btnYes.onclick = () => {
-          btnYes.classList.add("confirmed");
-          btnNo.classList.remove("confirmed");
+          // Actualizar estilos botones
+          btnYes.classList.add("active");
+          btnNo.classList.remove("active");
+
+          activeButtonByPlayer[i] = "yes";
+
           // Ajustar puntaje al máximo de jugadores activos
           const maxActive = activeScores.length > 0 ? Math.max(...activeScores) : 0;
           updatePlayerScore(i, maxActive);
@@ -360,14 +374,15 @@
         };
 
         btnNo.onclick = () => {
-          btnNo.classList.add("confirmed");
-          btnYes.classList.remove("confirmed");
+          btnNo.classList.add("active");
+          btnYes.classList.remove("active");
+
+          activeButtonByPlayer[i] = "no";
+
           playersPendingEntry.delete(i);
           // Jugador se queda fuera, bloqueado para siempre (o hasta reiniciar)
           renderPlayers();
         };
-
-        player.appendChild(overlay);
 
         // Añadir a pendiente para bloquear acciones hasta decidir
         playersPendingEntry.add(i);
@@ -478,6 +493,7 @@
       gameOver = false;
       winnerIndex = null;
       playersPendingEntry.clear();
+      activeButtonByPlayer = {};
       renderPlayers();
     }
   }
@@ -495,6 +511,7 @@
       gameOver = false;
       winnerIndex = null;
       playersPendingEntry.clear();
+      activeButtonByPlayer = {};
       renderPlayers();
     }
   }
@@ -539,6 +556,7 @@
     gameOver = false;
     winnerIndex = null;
     playersPendingEntry.clear();
+    activeButtonByPlayer = {};
     renderPlayers();
   };
 
