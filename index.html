@@ -160,7 +160,7 @@ button:disabled {
 
 .winner-label {
   margin-top: 6px;
-  font-size: 14px;
+  font-size: 16px;
   letter-spacing: 2px;
   color: #d4af37;
   font-weight: bold;
@@ -438,7 +438,7 @@ function renderPlayers() {
         <div class="score${isOut ? " out" : ""}">${score}</div>
         ${
           gameOver && i === winnerIndex
-            ? `<div class="winner-label">GANADOR (${score})</div>`
+            ? `<div class="winner-label">GANADOR ${score}</div>`
             : ""
         }
       </div>
@@ -497,8 +497,8 @@ function checkSpecialScores(newScore, scoreElement) {
     return;
   }
 
-  // Si pasa de 101 pregunta si quiere reingresar
-  if (newScore > 101) {
+  // Si pasa de 100 (101 incluido) pregunta si quiere reingresar
+  if (newScore >= 101) {
     if (reingresoOverlay.style.display === "flex") return;
 
     const players = document.querySelectorAll(".player");
@@ -511,7 +511,7 @@ function checkSpecialScores(newScore, scoreElement) {
 
     if (reingresoJugadorIndex === -1) return;
 
-    reingresoMensaje.textContent = `El jugador "${players[reingresoJugadorIndex].querySelector(".name-zone input").value}" superó 101 puntos. ¿Quieres que vuelva a entrar?`;
+    reingresoMensaje.textContent = `El jugador "${players[reingresoJugadorIndex].querySelector(".name-zone input").value}" alcanzó ${newScore} puntos. ¿Quieres que vuelva a entrar?`;
     reingresoOverlay.style.display = "flex";
   }
 }
@@ -537,6 +537,11 @@ function handleReingreso(decision) {
     // SI quiere reingresar: cerrar overlay y abrir modal de ingreso puntaje entre 0 y 100
     reingresoOverlay.style.display = "none";
 
+    // Incrementar contador de entradas
+    let entradasCount = parseInt(player.dataset.entradas) || 0;
+    entradasCount++;
+    player.dataset.entradas = entradasCount;
+
     currentScoreElement = scoreElement;
     pointsInput.value = "";
     modal.style.display = "flex";
@@ -548,16 +553,11 @@ function handleReingreso(decision) {
         alert("Por favor ingresa un número entre 0 y 100");
         return;
       }
-
       history.push(saveSnapshot());
       currentScoreElement.textContent = val;
+      player.dataset.entradas = entradasCount; // actualizar dataset
 
-      // Incrementar contador de entradas y actualizar dataset
-      let entradasCount = parseInt(player.dataset.entradas) || 0;
-      entradasCount++;
-      player.dataset.entradas = entradasCount;
-
-      // Actualizar o crear etiqueta "ENTRADAS" visible
+      // Actualizar etiqueta de entradas visible sin recargar
       const entradasLabel = player.querySelector(".entradas-label");
       if (entradasLabel) {
         entradasLabel.textContent = `ENTRADAS: ${entradasCount}`;
@@ -581,6 +581,7 @@ function handleReingreso(decision) {
     const buttons = modal.querySelectorAll(".modal-buttons button");
     buttons[0].onclick = () => applyPointsForReingreso();
     buttons[1].onclick = () => {
+      // Cancelar reingreso
       modal.style.display = "none";
       applyPointsForReingreso = null;
       reingresoJugadorIndex = null;
