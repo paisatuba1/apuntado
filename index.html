@@ -49,7 +49,6 @@ button {
   cursor: pointer;
 }
 
-/* BOTONES ESPECIALES */
 .btn-play {
   border-color: #2f6b3f;
   color: #9be5b1;
@@ -103,7 +102,6 @@ button {
   font-weight: bold;
 }
 
-/* CONTROLES INFERIORES */
 .bottom-controls {
   display: flex;
   justify-content: center;
@@ -178,14 +176,25 @@ button {
 
 <!-- MODAL -->
 <div class="modal" id="modal">
-  <div class="modal-content" id="modalContent"></div>
+  <div class="modal-content">
+    <input
+      id="pointsInput"
+      type="number"
+      inputmode="numeric"
+      placeholder="Puntos"
+    >
+    <div class="modal-buttons">
+      <button onclick="applyPoints(1)">+ Sumar</button>
+      <button onclick="applyPoints(-1)">− Restar</button>
+    </div>
+  </div>
 </div>
 
 <script>
 const playersContainer = document.getElementById("players");
 const selector = document.getElementById("playerCount");
 const modal = document.getElementById("modal");
-const modalContent = document.getElementById("modalContent");
+const pointsInput = document.getElementById("pointsInput");
 
 let currentScoreElement = null;
 let history = [];
@@ -217,41 +226,19 @@ function renderPlayers() {
       </div>
     `;
 
-    player.querySelector(".score-zone").onclick =
-      () => openPointsModal(player.querySelector(".score"));
+    player.querySelector(".score-zone").onclick = () => {
+      currentScoreElement = player.querySelector(".score");
+      pointsInput.value = "";
+      modal.style.display = "flex";
+      pointsInput.focus();
+    };
 
     playersContainer.appendChild(player);
   }
 }
 
-function openPointsModal(scoreElement) {
-  currentScoreElement = scoreElement;
-
-  modalContent.innerHTML = `
-    <input
-      type="number"
-      inputmode="numeric"
-      autofocus
-      id="pointsInput"
-      placeholder="Puntos"
-    >
-    <div class="modal-buttons">
-      <button onclick="applyPoints(1)">+ Sumar</button>
-      <button onclick="applyPoints(-1)">− Restar</button>
-    </div>
-  `;
-
-  modal.style.display = "flex";
-
-  // Forzar foco inmediato (iOS friendly)
-  setTimeout(() => {
-    document.getElementById("pointsInput").focus();
-  }, 50);
-}
-
 function applyPoints(multiplier) {
-  const input = document.getElementById("pointsInput");
-  const value = parseInt(input.value);
+  const value = parseInt(pointsInput.value);
   if (!isNaN(value)) {
     history.push(localStorage.getItem("apuntadoGame"));
     currentScoreElement.textContent =
@@ -259,6 +246,14 @@ function applyPoints(multiplier) {
   }
   closeModal();
 }
+
+function closeModal() {
+  modal.style.display = "none";
+}
+
+modal.onclick = e => {
+  if (e.target === modal) closeModal();
+};
 
 function saveGame() {
   const players = [];
@@ -276,52 +271,15 @@ function saveGame() {
 }
 
 function undoLast() {
-  if (history.length === 0) {
-    alert("No hay acciones para deshacer");
-    return;
-  }
-  modalContent.innerHTML = `
-    <p>¿Deshacer la última acción?</p>
-    <div class="modal-buttons">
-      <button onclick="closeModal()">Cancelar</button>
-      <button onclick="confirmUndo()">Confirmar</button>
-    </div>
-  `;
-  modal.style.display = "flex";
-}
-
-function confirmUndo() {
-  const last = history.pop();
-  if (last) localStorage.setItem("apuntadoGame", last);
-  renderPlayers();
-  closeModal();
+  alert("Deshacer (pendiente de mejora)");
 }
 
 function confirmReset() {
-  modalContent.innerHTML = `
-    <p>¿Seguro que quieres reiniciar el juego?</p>
-    <div class="modal-buttons">
-      <button onclick="closeModal()">Cancelar</button>
-      <button onclick="resetGame()">Reiniciar</button>
-    </div>
-  `;
-  modal.style.display = "flex";
+  if (confirm("¿Seguro que quieres reiniciar el juego?")) {
+    localStorage.removeItem("apuntadoGame");
+    renderPlayers();
+  }
 }
-
-function resetGame() {
-  localStorage.removeItem("apuntadoGame");
-  history = [];
-  renderPlayers();
-  closeModal();
-}
-
-function closeModal() {
-  modal.style.display = "none";
-}
-
-modal.onclick = e => {
-  if (e.target === modal) closeModal();
-};
 
 function showRules() {
   alert(
@@ -333,7 +291,6 @@ function showRules() {
 }
 
 selector.onchange = renderPlayers;
-
 renderPlayers();
 </script>
 
