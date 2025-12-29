@@ -1,138 +1,215 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>APUNTADO</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>APUNTADO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-    }
+<style>
+* {
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
 
-    body {
-      background: #000;
-      color: #fff;
-      height: 100vh;
-      overflow: hidden;
-    }
+body {
+  margin: 0;
+  background: #000;
+  color: #fff;
+  min-height: 100vh;
+}
 
-    /* Fondo con pintas */
-    body::before {
-      content: "♠ ♥ ♦ ♣";
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 200%;
-      height: 200%;
-      font-size: 80px;
-      color: rgba(0,255,0,0.08);
-      transform: rotate(-30deg);
-      pointer-events: none;
-    }
+header {
+  text-align: center;
+  padding: 15px;
+}
 
-    header {
-      text-align: center;
-      padding: 10px;
-      position: relative;
-      z-index: 2;
-    }
+h1 {
+  margin: 5px 0;
+  letter-spacing: 4px;
+}
 
-    h1 {
-      font-size: 2.2rem;
-      letter-spacing: 4px;
-    }
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
 
-    .btn-reglas {
-      position: absolute;
-      right: 15px;
-      top: 15px;
-      padding: 6px 12px;
-      background: transparent;
-      border: 1px solid #0f0;
-      color: #0f0;
-      cursor: pointer;
-    }
+select, button {
+  padding: 8px 12px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: none;
+}
 
-    /* Contenedor jugadores */
-    .jugadores {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      height: calc(100vh - 70px);
-      gap: 8px;
-      padding: 8px;
-      position: relative;
-      z-index: 2;
-    }
+.players {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  height: calc(100vh - 130px);
+}
 
-    .jugador {
-      border: 2px solid #f00;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 10px;
-      background: rgba(0,0,0,0.7);
-    }
+.player {
+  border: 1px solid #222;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+}
 
-    .nombre {
-      font-size: 1.1rem;
-      border-bottom: 1px solid #0f0;
-      padding-bottom: 5px;
-      outline: none;
-    }
+.player input {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  text-align: center;
+  outline: none;
+}
 
-    .puntaje {
-      font-size: 3rem;
-      text-align: center;
-      color: #0f0;
-    }
-  </style>
+.score {
+  text-align: center;
+  font-size: 48px;
+  font-weight: bold;
+}
+
+/* MODAL */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: #111;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  width: 80%;
+  max-width: 300px;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 10px;
+  font-size: 20px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.modal-buttons button {
+  flex: 1;
+  font-size: 20px;
+}
+</style>
 </head>
 
 <body>
 
-  <header>
-    <h1>APUNTADO</h1>
-    <button class="btn-reglas">Reglas</button>
-  </header>
+<header>
+  <h1>APUNTADO</h1>
+  <div class="controls">
+    <select id="playerCount">
+      <option value="2">2 jugadores</option>
+      <option value="3">3 jugadores</option>
+      <option value="4">4 jugadores</option>
+      <option value="5">5 jugadores</option>
+      <option value="6" selected>6 jugadores</option>
+    </select>
+    <button onclick="showRules()">Reglas</button>
+  </div>
+</header>
 
-  <main class="jugadores">
+<div class="players" id="players"></div>
 
-    <div class="jugador">
-      <div class="nombre" contenteditable="true">Jugador 1</div>
-      <div class="puntaje">0</div>
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <input type="number" id="pointsInput" placeholder="Puntos">
+    <div class="modal-buttons">
+      <button onclick="addPoints()">+ Sumar</button>
+      <button onclick="subtractPoints()">− Restar</button>
     </div>
+  </div>
+</div>
 
-    <div class="jugador">
-      <div class="nombre" contenteditable="true">Jugador 2</div>
-      <div class="puntaje">0</div>
-    </div>
+<script>
+const playersContainer = document.getElementById("players");
+const selector = document.getElementById("playerCount");
+const modal = document.getElementById("modal");
+const pointsInput = document.getElementById("pointsInput");
 
-    <div class="jugador">
-      <div class="nombre" contenteditable="true">Jugador 3</div>
-      <div class="puntaje">0</div>
-    </div>
+let currentScoreElement = null;
 
-    <div class="jugador">
-      <div class="nombre" contenteditable="true">Jugador 4</div>
-      <div class="puntaje">0</div>
-    </div>
+function renderPlayers() {
+  playersContainer.innerHTML = "";
+  const count = parseInt(selector.value);
 
-    <div class="jugador">
-      <div class="nombre" contenteditable="true">Jugador 5</div>
-      <div class="puntaje">0</div>
-    </div>
+  for (let i = 1; i <= count; i++) {
+    const div = document.createElement("div");
+    div.className = "player";
+    div.innerHTML = `
+      <input value="Jugador ${i}">
+      <div class="score">0</div>
+    `;
 
-    <div class="jugador">
-      <div class="nombre" contenteditable="true">Jugador 6</div>
-      <div class="puntaje">0</div>
-    </div>
+    div.addEventListener("click", () => {
+      currentScoreElement = div.querySelector(".score");
+      pointsInput.value = "";
+      modal.style.display = "flex";
+      pointsInput.focus();
+    });
 
-  </main>
+    playersContainer.appendChild(div);
+  }
+}
+
+function addPoints() {
+  const value = parseInt(pointsInput.value);
+  if (!isNaN(value)) {
+    currentScoreElement.textContent =
+      parseInt(currentScoreElement.textContent) + value;
+  }
+  closeModal();
+}
+
+function subtractPoints() {
+  const value = parseInt(pointsInput.value);
+  if (!isNaN(value)) {
+    currentScoreElement.textContent =
+      parseInt(currentScoreElement.textContent) - value;
+  }
+  closeModal();
+}
+
+function closeModal() {
+  modal.style.display = "none";
+}
+
+modal.addEventListener("click", e => {
+  if (e.target === modal) closeModal();
+});
+
+selector.addEventListener("change", renderPlayers);
+
+function showRules() {
+  alert("APUNTADO\n\nJuego de cartas donde los puntos se acumulan.\nPuedes sumar o restar puntos tocando cada jugador.\nSolo importa el puntaje final.");
+}
+
+renderPlayers();
+</script>
 
 </body>
 </html>
