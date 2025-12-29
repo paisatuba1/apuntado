@@ -39,7 +39,13 @@ select, button {
   padding: 8px 12px;
   font-size: 16px;
   border-radius: 5px;
-  border: none;
+  border: 1px solid #333;
+  background: #000;
+  color: #fff;
+}
+
+button {
+  cursor: pointer;
 }
 
 .players {
@@ -54,11 +60,14 @@ select, button {
   padding: 10px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  cursor: pointer;
 }
 
-.player input {
+.name-zone {
+  padding-bottom: 10px;
+}
+
+.name-zone input {
+  width: 100%;
   background: transparent;
   border: none;
   color: #fff;
@@ -67,8 +76,23 @@ select, button {
   outline: none;
 }
 
+/* Línea divisoria sutil */
+.divider {
+  height: 1px;
+  background: #333;
+  margin: 5px 0;
+}
+
+/* Zona de puntaje */
+.score-zone {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
 .score {
-  text-align: center;
   font-size: 48px;
   font-weight: bold;
 }
@@ -101,6 +125,9 @@ select, button {
   font-size: 20px;
   margin-bottom: 10px;
   text-align: center;
+  background: #000;
+  color: #fff;
+  border: 1px solid #333;
 }
 
 .modal-buttons {
@@ -160,13 +187,22 @@ function renderPlayers() {
   for (let i = 1; i <= count; i++) {
     const div = document.createElement("div");
     div.className = "player";
+
     div.innerHTML = `
-      <input value="Jugador ${i}">
-      <div class="score">0</div>
+      <div class="name-zone">
+        <input value="Jugador ${i}">
+      </div>
+      <div class="divider"></div>
+      <div class="score-zone">
+        <div class="score">0</div>
+      </div>
     `;
 
-    div.addEventListener("click", () => {
-      currentScoreElement = div.querySelector(".score");
+    const scoreZone = div.querySelector(".score-zone");
+    const scoreElement = div.querySelector(".score");
+
+    scoreZone.addEventListener("click", () => {
+      currentScoreElement = scoreElement;
       pointsInput.value = "";
       modal.style.display = "flex";
       pointsInput.focus();
@@ -205,7 +241,13 @@ modal.addEventListener("click", e => {
 selector.addEventListener("change", renderPlayers);
 
 function showRules() {
-  alert("APUNTADO\n\nJuego de cartas donde los puntos se acumulan.\nPuedes sumar o restar puntos tocando cada jugador.\nSolo importa el puntaje final.");
+  alert(
+    "APUNTADO\n\n" +
+    "Juego de cartas donde solo importa el puntaje final.\n\n" +
+    "• Toca el nombre para editarlo\n" +
+    "• Toca el puntaje para sumar o restar\n" +
+    "• Los puntos se acumulan mano a mano"
+  );
 }
 
 renderPlayers();
