@@ -472,12 +472,12 @@ function applyPoints(multiplier) {
     let newScore = parseInt(currentScoreElement.textContent) + value * multiplier;
     currentScoreElement.textContent = newScore;
 
-    // Actualizar ganador si corresponde (el puntaje más bajo gana)
-    if (!gameOver || (gameOver && newScore < parseInt(currentScoreElement.textContent))) {
-      checkWinner();
-    }
-
     saveGame();
+
+    checkWinner();
+
+    checkOutPlayers();
+
   }
   closeModal();
 }
@@ -500,6 +500,26 @@ function checkWinner() {
     winnerIndex = winnerIdx;
     renderPlayers();
   }
+}
+
+function checkOutPlayers() {
+  const scores = document.querySelectorAll(".score");
+  scores.forEach((scoreEl, index) => {
+    const val = parseInt(scoreEl.textContent);
+    const playerDiv = scoreEl.closest(".player");
+    if (val >= 101 && !playerDiv.classList.contains("disabled")) {
+      // Preguntar si quiere entrar
+      askReingreso(index);
+    }
+  });
+}
+
+function askReingreso(playerIndex) {
+  reingresoJugadorIndex = playerIndex;
+  const players = document.querySelectorAll(".player");
+  const playerName = players[playerIndex].querySelector(".name-zone input").value;
+  reingresoMensaje.textContent = `El jugador "${playerName}" ha superado o igualado 101 puntos. ¿Desea entrar nuevamente?`;
+  reingresoOverlay.style.display = "flex";
 }
 
 function closeModal() {
@@ -560,6 +580,7 @@ function handleReingreso(decision) {
       currentScoreElement.textContent = val;
       player.dataset.entradas = entradasCount;
 
+      // Actualizar etiqueta ENTRADAS
       const entradasLabel = player.querySelector(".entradas-label");
       if (entradasLabel) {
         entradasLabel.textContent = `ENTRADAS: ${entradasCount}`;
@@ -579,7 +600,8 @@ function handleReingreso(decision) {
       applyPointsForReingreso = null;
       reingresoJugadorIndex = null;
 
-      checkWinnerAfterReingreso();
+      // Chequear si tras este reingreso alguien supera 101 para nueva pregunta
+      checkOutPlayers();
     };
 
     const buttons = modal.querySelectorAll(".modal-buttons button");
@@ -592,18 +614,6 @@ function handleReingreso(decision) {
 
     pointsInput.focus();
   }
-}
-
-function checkWinnerAfterReingreso() {
-  const scores = document.querySelectorAll(".score");
-  scores.forEach((scoreEl, index) => {
-    const val = parseInt(scoreEl.textContent);
-    if (val <= -51 && !gameOver) {
-      gameOver = true;
-      winnerIndex = index;
-      renderPlayers();
-    }
-  });
 }
 
 selector.onchange = () => {
@@ -629,30 +639,31 @@ function showRules() {
       "• Gana quien llegue a −51 puntos\n" +
       "• Toca el nombre para editarlo\n" +
       "• Toca el puntaje para sumar o restar\n" +
-      "• DESHACER sigue activo tras ganar"
+      "• DESHACER sigue activo tras ganar\n" +
+      "• Cuando un jugador llega a 101 o más, decide si entra nuevamente\n" +
+      "• Si entra, asigna puntaje entre 0 y 100"
   );
 }
 
-function updatePlayButtonState(active) {
-  btnPlay.disabled = !active;
-  if (active) {
+function updatePlayButtonState(enabled) {
+  if (enabled) {
+    btnPlay.disabled = false;
     btnPlay.classList.add("active");
   } else {
+    btnPlay.disabled = true;
     btnPlay.classList.remove("active");
   }
 }
 
+btnPlay.onclick = saveGame;
+
 function onPlayClick() {
-  if (namesEdited) {
-    saveGame();
-    updatePlayButtonState(false);
-    namesEdited = false;
-    alert("¡A jugar!");
-  }
+  saveGame();
+  updatePlayButtonState(false);
+  namesEdited = false;
 }
 
 renderPlayers();
-updatePlayButtonState(false);
 </script>
 </body>
 </html>
