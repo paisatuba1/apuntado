@@ -102,6 +102,12 @@ button:disabled {
   font-weight: bold;
 }
 
+.name-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centra horizontalmente todo dentro */
+}
+
 .name-zone input {
   width: 100%;
   background: transparent;
@@ -112,7 +118,7 @@ button:disabled {
   outline: none;
 }
 
-/* Etiqueta "ENTRADAS:" amarilla debajo del nombre */
+/* Etiqueta "ENTRADAS:" amarilla debajo del nombre, centrada */
 .entradas-label {
   margin-top: 4px;
   font-size: 14px;
@@ -122,7 +128,9 @@ button:disabled {
   padding: 2px 6px;
   border-radius: 6px;
   width: fit-content;
+  /* Centrar dentro del contenedor flex */
   align-self: center;
+  user-select: none;
 }
 
 /* Puntaje en rojo para jugadores que no continúan */
@@ -313,6 +321,7 @@ let namesEdited = false;
 let lastSavedCount = null;
 
 let reingresoJugadorIndex = null; // jugador que está decidiendo si vuelve
+let applyPointsForReingreso = null;
 
 function loadGame() {
   const saved = localStorage.getItem("apuntadoGame");
@@ -453,6 +462,7 @@ function renderPlayers() {
         currentScoreElement = scoreElement;
         pointsInput.value = "";
         modal.style.display = "flex";
+        pointsInput.placeholder = "Puntos";
         pointsInput.focus();
       };
     }
@@ -462,6 +472,10 @@ function renderPlayers() {
 }
 
 function applyPoints(multiplier) {
+  if (applyPointsForReingreso) {
+    applyPointsForReingreso();
+    return;
+  }
   const value = parseInt(pointsInput.value);
   if (!isNaN(value) && currentScoreElement) {
     history.push(saveSnapshot());
@@ -533,7 +547,6 @@ function handleReingreso(decision) {
     modal.style.display = "flex";
     pointsInput.placeholder = "Ingresa puntaje 0 - 100";
 
-    // Cambiamos la función applyPoints para validar este ingreso específico
     applyPointsForReingreso = function () {
       const val = parseInt(pointsInput.value);
       if (isNaN(val) || val < 0 || val > 100) {
@@ -543,6 +556,18 @@ function handleReingreso(decision) {
       history.push(saveSnapshot());
       currentScoreElement.textContent = val;
       player.dataset.entradas = entradasCount; // actualizar dataset
+
+      // Actualizar etiqueta de entradas visible sin recargar
+      const entradasLabel = player.querySelector(".entradas-label");
+      if (entradasLabel) {
+        entradasLabel.textContent = `ENTRADAS: ${entradasCount}`;
+      } else {
+        const newLabel = document.createElement("div");
+        newLabel.className = "entradas-label";
+        newLabel.textContent = `ENTRADAS: ${entradasCount}`;
+        player.querySelector(".name-zone").appendChild(newLabel);
+      }
+
       player.classList.remove("disabled");
       scoreElement.classList.remove("out");
       saveGame();
@@ -590,34 +615,33 @@ modal.onclick = (e) => {
   if (e.target === modal) closeModal();
 };
 
+selector.onchange = () => {
+  if (confirm("Cambiar la cantidad de jugadores reiniciará el juego. ¿Deseas continuar?")) {
+    gameOver = false;
+    winnerIndex = null;
+    history = [];
+    namesEdited = false;
+    renderPlayers();
+    updatePlayButtonState(false);
+  } else {
+    // Revertir cambio en selector
+    if (lastSavedCount !== null) {
+      selector.value = lastSavedCount;
+    } else {
+      selector.value = 2;
+    }
+  }
+};
+
 function showRules() {
   alert(
     "APUNTADO\n\n" +
       "• Gana quien llegue a −51 puntos\n" +
       "• Toca el nombre para editarlo\n" +
       "• Toca el puntaje para sumar o restar\n" +
-      "• Si un jugador supera 101 puntos, puede decidir si vuelve a entrar\n" +
-      "• Si decide volver, debe ingresar un puntaje entre 0 y 100\n" +
       "• DESHACER sigue activo tras ganar"
   );
 }
-
-selector.onchange = () => {
-  if (!confirm("Cambiar la cantidad de jugadores reiniciará el juego. ¿Continuar?")) {
-    if (lastSavedCount) {
-      selector.value = lastSavedCount;
-    } else {
-      selector.value = 2;
-    }
-    return;
-  }
-  gameOver = false;
-  winnerIndex = null;
-  history = [];
-  namesEdited = false;
-  renderPlayers();
-  updatePlayButtonState(false);
-};
 
 function updatePlayButtonState(active) {
   btnPlay.disabled = !active;
@@ -628,11 +652,23 @@ function updatePlayButtonState(active) {
   }
 }
 
-function onPlayClick() {
+btnPlay.onclick = () => {
   saveGame();
-  alert("¡A jugar!");
   updatePlayButtonState(false);
   namesEdited = false;
+  alert("¡A jugar!");
+};
+
+function checkWinner() {
+  const scores = document.querySelectorAll(".score");
+  scores.forEach((scoreEl, index) => {
+    const value = parseInt(scoreEl.textContent);
+    if (value <= -51 && !gameOver) {
+      gameOver = true;
+      winnerIndex = index;
+      renderPlayers();
+    }
+  });
 }
 
 renderPlayers();
