@@ -72,6 +72,7 @@ button {
   display: flex;
   flex-direction: column;
   transition: opacity 0.3s, border 0.3s;
+  position: relative;
 }
 
 .player.disabled {
@@ -124,6 +125,57 @@ button {
   color: #d4af37;
 }
 
+/* Overlay para jugador fuera */
+.player.out {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.entry-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  color: #d4af37;
+  font-weight: bold;
+  font-size: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.entry-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.entry-buttons button {
+  padding: 8px 20px;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  user-select: none;
+}
+
+.entry-buttons button.yes {
+  background: #1e3ec8; /* azul */
+  color: white;
+}
+
+.entry-buttons button.no {
+  background: #c81e1e; /* rojo */
+  color: white;
+}
+
+.entry-buttons button.selected {
+  border-color: white;
+}
+
 .bottom-controls {
   display: flex;
   justify-content: center;
@@ -169,58 +221,6 @@ button {
 .modal-buttons button {
   flex: 1;
 }
-
-/* ENTRAR opciones */
-.player.out {
-  opacity: 0.3;
-  position: relative;
-  pointer-events: none;
-}
-
-.player.out .entry-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
-  color: #d4af37;
-  font-weight: bold;
-  font-size: 28px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  pointer-events: auto;
-  user-select: none;
-}
-
-.entry-buttons {
-  display: flex;
-  gap: 12px;
-}
-
-.entry-buttons button {
-  padding: 8px 20px;
-  font-size: 18px;
-  font-weight: bold;
-  border-radius: 8px;
-  border: 2px solid transparent;
-  cursor: pointer;
-  user-select: none;
-}
-
-.entry-buttons button.yes {
-  background: #1e3ec8; /* azul */
-  color: white;
-}
-
-.entry-buttons button.no {
-  background: #c81e1e; /* rojo */
-  color: white;
-}
-
-.entry-buttons button.selected {
-  border-color: white;
-}
 </style>
 </head>
 
@@ -229,13 +229,7 @@ button {
 <header>
   <h1>APUNTADO</h1>
   <div class="controls">
-    <select id="playerCount">
-      <option value="2">2 jugadores</option>
-      <option value="3">3 jugadores</option>
-      <option value="4">4 jugadores</option>
-      <option value="5">5 jugadores</option>
-      <option value="6">6 jugadores</option>
-    </select>
+    <select id="playerCount"></select>
     <button onclick="showRules()">Reglas</button>
     <button class="btn-play" onclick="saveGame()">JUGAR</button>
   </div>
@@ -268,45 +262,87 @@ let currentScoreElement = null;
 let history = [];
 let gameOver = false;
 let winnerIndex = null;
-
-// Jugadores que deben decidir si quieren volver a entrar
 const playersPendingEntry = new Map();
+
+const PLAYER_COUNT_MIN = 2;
+const PLAYER_COUNT_MAX = 6;
+
+// Carga las opciones del selector (2 a 6 jugadores)
+function loadPlayerCountOptions() {
+  for(let i = PLAYER_COUNT_MIN; i <= PLAYER_COUNT_MAX; i++) {
+    const option = document.createElement("option");
+    option.value = i;
+    option.textContent = `${i} jugador${i>1?'es':''}`;
+    selector.appendChild(option);
+  }
+}
+loadPlayerCountOptions();
+
+// Para controlar cambios sin perder datos sin querer
+let pendingPlayerCountChange = false;
+
+selector.onchange = () => {
+  if(pendingPlayerCountChange) return;
+  if(confirm("Cambiar la cantidad de jugadores reiniciará el juego. ¿Seguro que quieres cambiar?")) {
+    pendingPlayerCountChange = true;
+    gameOver = false;
+    winnerIndex = null;
+    playersPendingEntry.clear();
+    history = [];
+    localStorage.removeItem("apuntadoGame");
+    localStorage.setItem("apuntadoPlayerCount", selector.value);
+    renderPlayers();
+    pendingPlayerCountChange = false;
+  } else {
+    // Revertir al valor anterior guardado si canceló
+    const savedCount = localStorage.getItem("apuntadoPlayerCount");
+    if(savedCount) selector.value = savedCount;
+    else selector.value = PLAYER_COUNT_MIN;
+  }
+};
 
 function renderPlayers() {
   playersContainer.innerHTML = "";
 
-  const saved = localStorage.getItem("apuntadoGame");
-  const savedData = saved ? JSON.parse(saved) : null;
+  const savedRaw = localStorage.getItem("apuntadoGame");
+  let savedData = savedRaw ? JSON.parse(savedRaw) : null;
 
-  if (savedData) selector.value = savedData.count;
+  // Validar que la cantidad de jugadores coincida con selector
+  if(savedData && savedData.count != selector.value) {
+    savedData = null;
+    localStorage.removeItem("apuntadoGame");
+  }
+
+  if(savedData) selector.value = savedData.count;
 
   const count = parseInt(selector.value);
 
-  for (let i = 0; i < count; i++) {
+  for(let i=0; i<count; i++) {
     const player = document.createElement("div");
 
-    const playerScore = savedData?.players[i]?.score ?? 0;
-    const isOut = playerScore >= 101;
+    const name = savedData?.players[i]?.name || `Jugador ${i+1}`;
+    const score = savedData?.players[i]?.score ?? 0;
+
+    const isOut = score >= 101;
     const isWinner = gameOver && i === winnerIndex;
 
     player.className = "player";
-    if (gameOver) {
-      if (isWinner) {
-        player.classList.add("winner");
-      } else {
-        player.classList.add("disabled");
-      }
+    if(gameOver) {
+      if(isWinner) player.classList.add("winner");
+      else player.classList.add("disabled");
     }
-    if (isOut) {
-      player.classList.add("out");
-      if (playersPendingEntry.has(i)) {
+    if(isOut) player.classList.add("out");
+
+    if(isOut) {
+      // Si está pendiente decidir entrar
+      if(playersPendingEntry.has(i)) {
         player.innerHTML = `
           <div class="name-zone">
-            <input value="${savedData.players[i].name}" disabled>
+            <input value="${name}" disabled>
           </div>
           <div class="divider"></div>
           <div class="score-zone">
-            <div class="score">${playerScore}</div>
+            <div class="score">${score}</div>
           </div>
           <div class="entry-overlay">
             <div>ENTRAR?</div>
@@ -319,129 +355,105 @@ function renderPlayers() {
       } else {
         player.innerHTML = `
           <div class="name-zone">
-            <input value="${savedData.players[i].name}" disabled>
+            <input value="${name}" disabled>
           </div>
           <div class="divider"></div>
           <div class="score-zone">
-            <div class="score">${playerScore}</div>
+            <div class="score">${score}</div>
           </div>
         `;
       }
     } else {
       player.innerHTML = `
         <div class="name-zone">
-          <input value="${savedData?.players[i]?.name || `Jugador ${i + 1}`}" ${gameOver ? "disabled" : ""}>
+          <input value="${name}" ${gameOver ? "disabled" : ""}>
         </div>
         <div class="divider"></div>
-        <div class="score-zone">
-          <div class="score">${playerScore}</div>
+        <div class="score-zone" ${gameOver ? "" : "onclick='openModal(this)'"} >
+          <div class="score">${score}</div>
           ${isWinner ? `<div class="winner-label">GANADOR</div>` : ""}
         </div>
       `;
-    }
-
-    if (!gameOver && !isOut) {
-      const scoreZone = player.querySelector(".score-zone");
-      const scoreElement = player.querySelector(".score");
-      scoreZone.onclick = () => {
-        currentScoreElement = scoreElement;
-        pointsInput.value = "";
-        modal.style.display = "flex";
-        pointsInput.focus();
-      };
     }
 
     playersContainer.appendChild(player);
   }
 }
 
+function openModal(scoreZone) {
+  currentScoreElement = scoreZone.querySelector(".score");
+  pointsInput.value = "";
+  modal.style.display = "flex";
+  pointsInput.focus();
+}
+
 function applyPoints(multiplier) {
   const value = parseInt(pointsInput.value);
-  if (!isNaN(value)) {
+  if(!isNaN(value)) {
     history.push(saveSnapshot());
-    currentScoreElement.textContent =
-      parseInt(currentScoreElement.textContent) + value * multiplier;
-    checkPlayersOut();
+    currentScoreElement.textContent = parseInt(currentScoreElement.textContent) + value * multiplier;
+    saveGameAuto();
     checkWinner();
+    checkPlayersOut();
   }
   closeModal();
 }
 
-function checkPlayersOut() {
-  const scores = Array.from(document.querySelectorAll(".score"));
-  const outPlayers = [];
-
-  scores.forEach((scoreEl, idx) => {
-    if (parseInt(scoreEl.textContent) >= 101) {
-      outPlayers.push(idx);
-    }
-  });
-
-  // Para cada jugador fuera que no tenga pendiente entrada, pedir decisión
-  outPlayers.forEach((idx) => {
-    if (!playersPendingEntry.has(idx)) {
-      playersPendingEntry.set(idx, null);
-      renderPlayers();
-    }
-  });
-}
-
 function checkWinner() {
-  const scores = Array.from(document.querySelectorAll(".score"));
-  const count = scores.length;
-
-  // No declarar ganador si hay jugadores pendientes de decidir
-  if (playersPendingEntry.size > 0) return;
-
-  // Revisar si alguien llegó a -51 o menos
-  for (let i = 0; i < count; i++) {
-    const val = parseInt(scores[i].textContent);
-    if (val <= -51) {
+  const scores = Array.from(document.querySelectorAll(".score")).map(el => parseInt(el.textContent));
+  for(let i=0; i<scores.length; i++) {
+    if(scores[i] <= -51 && !gameOver) {
       gameOver = true;
       winnerIndex = i;
       renderPlayers();
       return;
     }
   }
-
-  // Revisar si solo queda 1 jugador activo (los demás con 101 o más)
-  const outPlayers = scores.reduce((acc, scoreEl, idx) => {
-    if (parseInt(scoreEl.textContent) >= 101) acc.push(idx);
-    return acc;
-  }, []);
-
-  if (!gameOver && outPlayers.length === count - 1) {
+  // Revisar si queda solo 1 activo (los demás fuera)
+  const outPlayers = scores.reduce((acc, val, idx) => val >= 101 ? acc.concat(idx) : acc, []);
+  if(!gameOver && outPlayers.length === scores.length - 1) {
     gameOver = true;
     winnerIndex = scores.findIndex((_, idx) => !outPlayers.includes(idx));
     renderPlayers();
   }
 }
 
-function entryDecision(playerIndex, decision, btn) {
-  if (!playersPendingEntry.has(playerIndex)) return;
+function checkPlayersOut() {
+  const scores = Array.from(document.querySelectorAll(".score")).map(el => parseInt(el.textContent));
+  const outPlayers = scores.reduce((acc, val, idx) => val >= 101 ? acc.concat(idx) : acc, []);
+  // Pedir decisión inmediata a los jugadores fuera que no hayan decidido aún
+  outPlayers.forEach(idx => {
+    if(!playersPendingEntry.has(idx)) {
+      playersPendingEntry.set(idx, null);
+      renderPlayers();
+    }
+  });
+}
 
-  // Destacar selección
+function entryDecision(playerIndex, decision, btn) {
+  if(!playersPendingEntry.has(playerIndex)) return;
+  
   const parent = btn.parentElement;
-  [...parent.children].forEach((b) => b.classList.remove("selected"));
+  [...parent.children].forEach(b => b.classList.remove("selected"));
   btn.classList.add("selected");
 
-  if (decision) {
-    // Si decide entrar, actualizar puntaje al máximo de jugadores activos (menos los que están fuera)
-    const scores = Array.from(document.querySelectorAll(".score")).map(el =>
-      parseInt(el.textContent)
-    );
+  if(decision) {
+    // Si decide entrar, su puntaje será el máximo de los activos
+    const scores = Array.from(document.querySelectorAll(".score")).map(el => parseInt(el.textContent));
     const activeScores = scores.filter((score, idx) => score < 101 && idx !== playerIndex);
     const maxActiveScore = activeScores.length > 0 ? Math.max(...activeScores) : 0;
 
-    const players = JSON.parse(localStorage.getItem("apuntadoGame"));
-    if (players && players.players[playerIndex]) {
-      players.players[playerIndex].score = maxActiveScore;
-      localStorage.setItem("apuntadoGame", JSON.stringify(players));
+    const savedRaw = localStorage.getItem("apuntadoGame");
+    if(savedRaw) {
+      const savedData = JSON.parse(savedRaw);
+      savedData.players[playerIndex].score = maxActiveScore;
+      localStorage.setItem("apuntadoGame", JSON.stringify(savedData));
     }
     playersPendingEntry.delete(playerIndex);
+    saveGameAuto();
     renderPlayers();
   } else {
-    // Si decide no entrar, se queda fuera
+    // Se queda fuera sin entrar
     playersPendingEntry.delete(playerIndex);
     renderPlayers();
   }
@@ -452,14 +464,14 @@ function saveSnapshot() {
 }
 
 function undoLast() {
-  if (history.length === 0) {
-    if (confirm("¿Seguro que quieres deshacer la última acción?")) {
+  if(history.length === 0) {
+    if(confirm("¿Seguro que quieres deshacer la última acción?")) {
       alert("No hay acciones para deshacer");
     }
     return;
   }
   const last = history.pop();
-  if (last) {
+  if(last) {
     localStorage.setItem("apuntadoGame", last);
     gameOver = false;
     winnerIndex = null;
@@ -469,8 +481,9 @@ function undoLast() {
 }
 
 function confirmReset() {
-  if (confirm("¿Seguro que quieres reiniciar el juego?")) {
+  if(confirm("¿Seguro que quieres reiniciar el juego?")) {
     localStorage.removeItem("apuntadoGame");
+    localStorage.removeItem("apuntadoPlayerCount");
     history = [];
     gameOver = false;
     winnerIndex = null;
@@ -481,60 +494,56 @@ function confirmReset() {
 
 function saveGame() {
   const players = [];
-  document.querySelectorAll(".player").forEach((p) => {
+  document.querySelectorAll(".player").forEach(p => {
     players.push({
       name: p.querySelector("input").value,
-      score: p.querySelector(".score").textContent,
+      score: p.querySelector(".score").textContent
     });
   });
-  localStorage.setItem(
-    "apuntadoGame",
-    JSON.stringify({
-      count: selector.value,
-      players,
-    })
-  );
+  localStorage.setItem("apuntadoGame", JSON.stringify({
+    count: selector.value,
+    players
+  }));
   alert("Partida guardada");
   renderPlayers();
+}
+
+function saveGameAuto() {
+  // Guarda automáticamente sin alerta ni render extra
+  const players = [];
+  document.querySelectorAll(".player").forEach(p => {
+    players.push({
+      name: p.querySelector("input").value,
+      score: p.querySelector(".score").textContent
+    });
+  });
+  localStorage.setItem("apuntadoGame", JSON.stringify({
+    count: selector.value,
+    players
+  }));
 }
 
 function closeModal() {
   modal.style.display = "none";
 }
 
-modal.onclick = (e) => {
-  if (e.target === modal) closeModal();
+modal.onclick = e => {
+  if(e.target === modal) closeModal();
 };
 
 function showRules() {
   alert(
     "APUNTADO\n\n" +
-      "• Gana quien llegue a −51 puntos\n" +
-      "• Gana quien quede solo sin jugadores activos (los demás con 101 o más puntos)\n" +
-      "• Toca el nombre para editarlo\n" +
-      "• Toca el puntaje para sumar o restar\n" +
-      "• DESHACER sigue activo tras ganar"
+    "• Gana quien llegue a −51 puntos\n" +
+    "• Gana quien quede solo sin jugadores activos (los demás con 101 o más puntos)\n" +
+    "• Toca el nombre para editarlo\n" +
+    "• Toca el puntaje para sumar o restar\n" +
+    "• DESHACER sigue activo tras ganar"
   );
 }
 
-selector.onchange = () => {
-  if (confirm("Cambiar la cantidad de jugadores reiniciará el juego. ¿Quieres continuar?")) {
-    gameOver = false;
-    winnerIndex = null;
-    playersPendingEntry.clear();
-    localStorage.removeItem("apuntadoGame");
-    localStorage.setItem("apuntadoPlayerCount", selector.value);
-    renderPlayers();
-  } else {
-    // Si cancela, volver a valor anterior guardado (si hay)
-    const savedCount = localStorage.getItem("apuntadoPlayerCount");
-    if (savedCount) {
-      selector.value = savedCount;
-    }
-  }
-};
-
 renderPlayers();
+
 </script>
 
 </body>
