@@ -106,14 +106,21 @@ button {
 .score-zone {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
 }
 
 .score {
   font-size: 48px;
   font-weight: bold;
+}
+
+.winner-label {
+  margin-top: 6px;
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: #d4af37;
 }
 
 .bottom-controls {
@@ -188,7 +195,6 @@ button {
   <button class="btn-danger" onclick="confirmReset()">REINICIAR</button>
 </div>
 
-<!-- MODAL -->
 <div class="modal" id="modal">
   <div class="modal-content">
     <input id="pointsInput" type="number" inputmode="numeric" placeholder="Puntos">
@@ -242,6 +248,7 @@ function renderPlayers() {
       <div class="divider"></div>
       <div class="score-zone">
         <div class="score">${score}</div>
+        ${gameOver && i === winnerIndex ? `<div class="winner-label">GANADOR</div>` : ""}
       </div>
     `;
 
@@ -279,14 +286,9 @@ function checkWinner() {
     if (value <= -51 && !gameOver) {
       gameOver = true;
       winnerIndex = index;
-      showWinner(index, value);
+      renderPlayers();
     }
   });
-}
-
-function showWinner(index, score) {
-  alert(`GANADOR\n\n${document.querySelectorAll(".name-zone input")[index].value}\n${score} puntos`);
-  renderPlayers();
 }
 
 function saveSnapshot() {
@@ -329,7 +331,6 @@ function saveGame() {
     count: selector.value,
     players
   }));
-  alert("Partida guardada");
 }
 
 function closeModal() {
