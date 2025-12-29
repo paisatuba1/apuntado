@@ -438,7 +438,7 @@ function renderPlayers() {
         <div class="score${isOut ? " out" : ""}">${score}</div>
         ${
           gameOver && i === winnerIndex
-            ? `<div class="winner-label">GANADOR</div>`
+            ? `<div class="winner-label">GANADOR (${score})</div>`
             : ""
         }
       </div>
