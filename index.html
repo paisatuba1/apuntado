@@ -177,48 +177,59 @@
   .enter-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.85);
     color: #fff;
-    font-size: 24px;
-    font-weight: bold;
-    text-align: center;
+    font-size: 26px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 15px;
+    gap: 16px;
     border-radius: 6px;
     z-index: 10;
-    color: #bb8b2e; /* mostaza quemado */
+    user-select: none;
+  }
+
+  .enter-overlay div:first-child {
+    font-weight: bold;
+    color: #b27300; /* mostaza quemado */
+    font-size: 32px;
+    letter-spacing: 2px;
   }
 
   .enter-buttons {
     display: flex;
-    gap: 20px;
+    gap: 16px;
   }
 
   .enter-buttons button {
-    padding: 10px 20px;
-    border-radius: 6px;
-    border: none;
-    font-weight: bold;
-    font-size: 18px;
-    opacity: 0.6;
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background: #222;
+    color: #fff;
     cursor: pointer;
-    transition: opacity 0.3s ease;
-    color: white;
+    font-weight: bold;
+    font-size: 20px;
+    transition: border-color 0.3s, background-color 0.3s;
+    user-select: none;
   }
 
   .enter-buttons button.btn-yes {
-    background-color: #4569a1; /* azul opaco */
+    color: #3a7bd5; /* azul */
   }
 
   .enter-buttons button.btn-no {
-    background-color: #a14b4b; /* rojo opaco */
+    color: #d93a3a; /* rojo */
   }
 
-  .enter-buttons button.active {
-    opacity: 1;
+  .enter-buttons button.selected {
+    border-color: #fff;
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .enter-buttons button:hover:not(.selected) {
+    background-color: rgba(255, 255, 255, 0.1);
   }
 </style>
 </head>
@@ -270,9 +281,6 @@
 
   // Estados de jugadores "fuera" con solicitud de entrada
   let playersPendingEntry = new Set();
-
-  // Para controlar botones SI/NO activados en overlay
-  let activeButtonByPlayer = {};
 
   function renderPlayers() {
     playersContainer.innerHTML = "";
@@ -330,7 +338,7 @@
       `;
 
       // Si está fuera y no ha decidido si vuelve, mostrar overlay con opción para volver a entrar
-      if (score >= 101) {
+      if (isOut) {
         // Hacemos opaco el cuadro
         player.style.opacity = "0.4";
         player.style.pointerEvents = "auto"; // Para que reciba clicks en el overlay
@@ -346,26 +354,18 @@
           </div>
         `;
 
-        // Añadir overlay al jugador
-        player.appendChild(overlay);
-
-        // Manejar clicks de botones con efecto opacidad
+        // Manejar clicks de botones con resaltado
         const btnYes = overlay.querySelector(".btn-yes");
         const btnNo = overlay.querySelector(".btn-no");
 
-        // Si ya se había seleccionado alguna opción, ponerla activa
-        if (activeButtonByPlayer[i]) {
-          if (activeButtonByPlayer[i] === "yes") btnYes.classList.add("active");
-          if (activeButtonByPlayer[i] === "no") btnNo.classList.add("active");
+        function clearSelection() {
+          btnYes.classList.remove("selected");
+          btnNo.classList.remove("selected");
         }
 
         btnYes.onclick = () => {
-          // Actualizar estilos botones
-          btnYes.classList.add("active");
-          btnNo.classList.remove("active");
-
-          activeButtonByPlayer[i] = "yes";
-
+          clearSelection();
+          btnYes.classList.add("selected");
           // Ajustar puntaje al máximo de jugadores activos
           const maxActive = activeScores.length > 0 ? Math.max(...activeScores) : 0;
           updatePlayerScore(i, maxActive);
@@ -374,15 +374,14 @@
         };
 
         btnNo.onclick = () => {
-          btnNo.classList.add("active");
-          btnYes.classList.remove("active");
-
-          activeButtonByPlayer[i] = "no";
-
+          clearSelection();
+          btnNo.classList.add("selected");
           playersPendingEntry.delete(i);
           // Jugador se queda fuera, bloqueado para siempre (o hasta reiniciar)
           renderPlayers();
         };
+
+        player.appendChild(overlay);
 
         // Añadir a pendiente para bloquear acciones hasta decidir
         playersPendingEntry.add(i);
@@ -493,7 +492,6 @@
       gameOver = false;
       winnerIndex = null;
       playersPendingEntry.clear();
-      activeButtonByPlayer = {};
       renderPlayers();
     }
   }
@@ -511,7 +509,6 @@
       gameOver = false;
       winnerIndex = null;
       playersPendingEntry.clear();
-      activeButtonByPlayer = {};
       renderPlayers();
     }
   }
@@ -556,7 +553,6 @@
     gameOver = false;
     winnerIndex = null;
     playersPendingEntry.clear();
-    activeButtonByPlayer = {};
     renderPlayers();
   };
 
