@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
+/* (El mismo CSS que antes, no cambia nada aquí) */
 * {
   box-sizing: border-box;
   font-family: Arial, sans-serif;
@@ -105,7 +106,7 @@ button:disabled {
 .name-zone {
   display: flex;
   flex-direction: column;
-  align-items: center; /* Centra horizontalmente todo dentro */
+  align-items: center;
 }
 
 .name-zone input {
@@ -118,22 +119,19 @@ button:disabled {
   outline: none;
 }
 
-/* Etiqueta "ENTRADAS:" amarilla debajo del nombre, centrada */
 .entradas-label {
   margin-top: 4px;
   font-size: 14px;
   font-weight: bold;
-  background: #ffeb3b; /* amarillo */
+  background: #ffeb3b;
   color: #000;
   padding: 2px 6px;
   border-radius: 6px;
   width: fit-content;
-  /* Centrar dentro del contenedor flex */
   align-self: center;
   user-select: none;
 }
 
-/* Puntaje en rojo para jugadores que no continúan */
 .score.out {
   color: #e55353;
 }
@@ -173,7 +171,6 @@ button:disabled {
   padding: 10px;
 }
 
-/* MODAL para sumar/restar puntos */
 .modal {
   position: fixed;
   inset: 0;
@@ -214,11 +211,10 @@ button:disabled {
   cursor: pointer;
 }
 
-/* MODAL para pregunta reingreso */
 #reingresoOverlay {
   position: fixed;
   inset: 0;
-  background: transparent; /* sin fondo opaco */
+  background: transparent;
   display: none;
   align-items: center;
   justify-content: center;
@@ -258,7 +254,6 @@ button:disabled {
 }
 </style>
 </head>
-
 <body>
 <header>
   <h1>APUNTADO</h1>
@@ -282,7 +277,6 @@ button:disabled {
   <button class="btn-danger" onclick="confirmReset()">REINICIAR</button>
 </div>
 
-<!-- Modal sumar/restar puntos -->
 <div class="modal" id="modal">
   <div class="modal-content">
     <input id="pointsInput" type="number" inputmode="numeric" placeholder="Puntos" />
@@ -293,7 +287,6 @@ button:disabled {
   </div>
 </div>
 
-<!-- Overlay para preguntar reingreso -->
 <div id="reingresoOverlay">
   <div class="content">
     <div id="reingresoMensaje"></div>
@@ -320,7 +313,7 @@ let winnerIndex = null;
 let namesEdited = false;
 let lastSavedCount = null;
 
-let reingresoJugadorIndex = null; // jugador que está decidiendo si vuelve
+let reingresoJugadorIndex = null;
 let applyPointsForReingreso = null;
 
 function loadGame() {
@@ -404,8 +397,7 @@ function renderPlayers() {
     player.className = "player";
 
     const savedData = loadGame();
-    const isDisabled =
-      savedData?.players[i]?.disabled === true ? true : false;
+    const isDisabled = savedData?.players[i]?.disabled === true ? true : false;
     const isOut = savedData?.players[i]?.out === true ? true : false;
     const entradasCount = savedData?.players[i]?.entradas || 0;
 
@@ -438,7 +430,7 @@ function renderPlayers() {
         <div class="score${isOut ? " out" : ""}">${score}</div>
         ${
           gameOver && i === winnerIndex
-            ? `<div class="winner-label">GANADOR ${score}</div>`
+            ? `<div class="winner-label">GANADOR</div>`
             : ""
         }
       </div>
@@ -449,7 +441,6 @@ function renderPlayers() {
     const scoreElement = player.querySelector(".score");
 
     if (!gameOver && !isDisabled) {
-      // Detectar edición de nombre para activar botón JUGAR
       nameInput.addEventListener("input", () => {
         if (!namesEdited) {
           namesEdited = true;
@@ -457,7 +448,6 @@ function renderPlayers() {
         }
       });
 
-      // Click para abrir modal sumar/restar puntos
       scoreZone.onclick = () => {
         currentScoreElement = scoreElement;
         pointsInput.value = "";
@@ -488,7 +478,6 @@ function applyPoints(multiplier) {
 }
 
 function checkSpecialScores(newScore, scoreElement) {
-  // Si alcanza o baja de -51 gana
   if (newScore <= -51 && !gameOver) {
     gameOver = true;
     const scores = document.querySelectorAll(".score");
@@ -497,7 +486,6 @@ function checkSpecialScores(newScore, scoreElement) {
     return;
   }
 
-  // Si pasa de 100 (101 incluido) pregunta si quiere reingresar
   if (newScore >= 101) {
     if (reingresoOverlay.style.display === "flex") return;
 
@@ -527,17 +515,14 @@ function handleReingreso(decision) {
   const scoreElement = player.querySelector(".score");
 
   if (decision === false) {
-    // NO quiere reingresar: dejar puntaje en rojo y bloquear casilla
     player.classList.add("disabled");
     scoreElement.classList.add("out");
     saveGame();
     reingresoOverlay.style.display = "none";
     reingresoJugadorIndex = null;
   } else {
-    // SI quiere reingresar: cerrar overlay y abrir modal de ingreso puntaje entre 0 y 100
     reingresoOverlay.style.display = "none";
 
-    // Incrementar contador de entradas
     let entradasCount = parseInt(player.dataset.entradas) || 0;
     entradasCount++;
     player.dataset.entradas = entradasCount;
@@ -555,9 +540,8 @@ function handleReingreso(decision) {
       }
       history.push(saveSnapshot());
       currentScoreElement.textContent = val;
-      player.dataset.entradas = entradasCount; // actualizar dataset
+      player.dataset.entradas = entradasCount;
 
-      // Actualizar etiqueta de entradas visible sin recargar
       const entradasLabel = player.querySelector(".entradas-label");
       if (entradasLabel) {
         entradasLabel.textContent = `ENTRADAS: ${entradasCount}`;
@@ -577,11 +561,9 @@ function handleReingreso(decision) {
       checkWinnerAfterReingreso();
     };
 
-    // Sobrescribimos botones para este modo especial
     const buttons = modal.querySelectorAll(".modal-buttons button");
     buttons[0].onclick = () => applyPointsForReingreso();
     buttons[1].onclick = () => {
-      // Cancelar reingreso
       modal.style.display = "none";
       applyPointsForReingreso = null;
       reingresoJugadorIndex = null;
