@@ -331,7 +331,7 @@ function saveGame() {
   const players = [];
   document.querySelectorAll(".player").forEach((p) => {
     players.push({
-      name: p.querySelector(".name-zone input").value.trim() || "Jugador",
+      name: p.querySelector(".name-zone input").value.trim() || "Nombre",
       score: parseInt(p.querySelector(".score").textContent) || 0,
       disabled: p.classList.contains("disabled"),
       out: p.querySelector(".score").classList.contains("out") || false,
@@ -412,7 +412,7 @@ function renderPlayers() {
       player.classList.add("disabled");
     }
 
-    const name = savedData?.players[i]?.name || `Jugador ${i + 1}`;
+    const name = savedData?.players[i]?.name || `Nombre ${i + 1}`;
     const score = savedData?.players[i]?.score ?? 0;
 
     player.dataset.entradas = entradasCount;
