@@ -251,21 +251,6 @@ button:disabled {
   border: 2px solid orange;
   color: orange;
 }
-
-/* Overlay de actualización */
-#updatingOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 30;
-  color: #9be5b1;
-  font-size: 32px;
-  font-weight: bold;
-  user-select: none;
-}
 </style>
 </head>
 <body>
@@ -294,8 +279,8 @@ button:disabled {
   <div class="modal-content">
     <input id="pointsInput" type="number" inputmode="numeric" placeholder="Puntos" />
     <div class="modal-buttons">
-      <button id="btnSumar">+ Sumar</button>
-      <button id="btnRestar">− Restar</button>
+      <button onclick="applyPoints(1)">+ Sumar</button>
+      <button onclick="applyPoints(-1)">− Restar</button>
     </div>
   </div>
 </div>
@@ -310,8 +295,6 @@ button:disabled {
   </div>
 </div>
 
-<div id="updatingOverlay">ACTUALIZANDO... 3</div>
-
 <script>
 const playersContainer = document.getElementById("players");
 const selector = document.getElementById("playerCount");
@@ -320,7 +303,6 @@ const pointsInput = document.getElementById("pointsInput");
 const btnPlay = document.getElementById("btnPlay");
 const reingresoOverlay = document.getElementById("reingresoOverlay");
 const reingresoMensaje = document.getElementById("reingresoMensaje");
-const updatingOverlay = document.getElementById("updatingOverlay");
 
 let currentScoreElement = null;
 let history = [];
@@ -593,35 +575,32 @@ function handleReingreso(decision) {
         alert("Por favor ingresa un número entre 0 y 100");
         return;
       }
+      history.push(saveSnapshot());
+      currentScoreElement.textContent = val;
+      player.dataset.entradas = entradasCount;
 
-      // Mostrar overlay actualizando con cuenta regresiva
+      // Actualizar etiqueta ENTRADAS
+      const entradasLabel = player.querySelector(".entradas-label");
+      if (entradasLabel) {
+        entradasLabel.textContent = `ENTRADAS: ${entradasCount}`;
+      } else {
+        const newLabel = document.createElement("div");
+        newLabel.className = "entradas-label";
+        newLabel.textContent = `ENTRADAS: ${entradasCount}`;
+        player.querySelector(".name-zone").appendChild(newLabel);
+      }
+
+      player.classList.remove("disabled");
+      scoreElement.classList.remove("out");
+      saveGame();
       modal.style.display = "none";
-      showUpdatingOverlay(3, () => {
-        history.push(saveSnapshot());
-        currentScoreElement.textContent = val;
-        player.dataset.entradas = entradasCount;
 
-        // Actualizar etiqueta ENTRADAS
-        const entradasLabel = player.querySelector(".entradas-label");
-        if (entradasLabel) {
-          entradasLabel.textContent = `ENTRADAS: ${entradasCount}`;
-        } else {
-          const newLabel = document.createElement("div");
-          newLabel.className = "entradas-label";
-          newLabel.textContent = `ENTRADAS: ${entradasCount}`;
-          player.querySelector(".name-zone").appendChild(newLabel);
-        }
+      // Limpieza para evitar bloqueo
+      applyPointsForReingreso = null;
+      reingresoJugadorIndex = null;
 
-        player.classList.remove("disabled");
-        scoreElement.classList.remove("out");
-        saveGame();
-
-        applyPointsForReingreso = null;
-        reingresoJugadorIndex = null;
-
-        // Chequear si tras este reingreso alguien supera 101 para nueva pregunta
-        checkOutPlayers();
-      });
+      // Chequear si tras este reingreso alguien supera 101 para nueva pregunta
+      checkOutPlayers();
     };
 
     const buttons = modal.querySelectorAll(".modal-buttons button");
@@ -634,23 +613,6 @@ function handleReingreso(decision) {
 
     pointsInput.focus();
   }
-}
-
-function showUpdatingOverlay(seconds, callback) {
-  let counter = seconds;
-  updatingOverlay.textContent = `ACTUALIZANDO... ${counter}`;
-  updatingOverlay.style.display = "flex";
-
-  const interval = setInterval(() => {
-    counter--;
-    if (counter <= 0) {
-      clearInterval(interval);
-      updatingOverlay.style.display = "none";
-      callback();
-    } else {
-      updatingOverlay.textContent = `ACTUALIZANDO... ${counter}`;
-    }
-  }, 1000);
 }
 
 selector.onchange = () => {
