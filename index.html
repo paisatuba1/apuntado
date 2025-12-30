@@ -119,16 +119,18 @@ button:disabled {
 }
 
 .entradas-label {
-  margin-top: 4px;
+  margin-top: 6px;
   font-size: 14px;
   font-weight: bold;
-  background: #ffeb3b;
+  background: #ffeb3b; /* amarillo claro */
   color: #000;
-  padding: 2px 6px;
-  border-radius: 6px;
+  padding: 4px 8px;
+  border-radius: 8px;
   width: fit-content;
   align-self: center;
   user-select: none;
+  text-align: center;
+  box-shadow: 0 0 5px rgba(0,0,0,0.3);
 }
 
 .score.out {
@@ -264,7 +266,7 @@ button:disabled {
       <option value="5">5 jugadores</option>
       <option value="6">6 jugadores</option>
     </select>
-    <!-- Botón REGLAS removido -->
+    <!-- Eliminado botón reglas -->
     <button class="btn-play" id="btnPlay" onclick="onPlayClick()" disabled>JUGAR</button>
   </div>
 </header>
@@ -419,7 +421,7 @@ function renderPlayers() {
       <div class="name-zone">
         <input value="${name}" ${gameOver || isDisabled ? "disabled" : ""} data-player-index="${i}">
         ${
-          entradasCount > 0
+          entradasCount && entradasCount > 0
             ? `<div class="entradas-label">ENTRADAS: ${entradasCount}</div>`
             : ""
         }
@@ -525,7 +527,6 @@ function askReingreso(playerIndex) {
 function closeModal() {
   modal.style.display = "none";
   applyPointsForReingreso = null;
-  reingresoJugadorIndex = null;
 
   // Restaurar eventos normales a botones modal
   const buttons = modal.querySelectorAll(".modal-buttons button");
@@ -581,6 +582,7 @@ function handleReingreso(decision) {
       currentScoreElement.textContent = val;
       player.dataset.entradas = entradasCount;
 
+      // Actualizar etiqueta ENTRADAS
       const entradasLabel = player.querySelector(".entradas-label");
       if (entradasLabel) {
         entradasLabel.textContent = `ENTRADAS: ${entradasCount}`;
@@ -599,9 +601,6 @@ function handleReingreso(decision) {
       // Limpieza para evitar bloqueo
       applyPointsForReingreso = null;
       reingresoJugadorIndex = null;
-
-      // Refrescar interfaz completa para evitar bloqueos en Safari
-      renderPlayers();
 
       // Chequear si tras este reingreso alguien supera 101 para nueva pregunta
       checkOutPlayers();
