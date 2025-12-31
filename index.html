@@ -2,29 +2,13 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>APUNTADO</title>
+<title>APUNTADO V.01 - ESTABLE 1</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
-*{
-  box-sizing:border-box;
-  font-family:Arial,sans-serif;
-}
+*{box-sizing:border-box;font-family:Arial,sans-serif}
+body{margin:0;background:#000;color:#fff;min-height:100vh;overflow-x:hidden}
 
-html,body{
-  margin:0;
-  padding:0;
-  background:#000;
-  color:#fff;
-  min-height:100vh;
-  overflow-x:hidden; /* ✅ CLAVE */
-}
-
-h1{
-  text-align:center;
-  letter-spacing:4px;
-  margin:15px 0;
-}
+h1{text-align:center;letter-spacing:4px;margin:15px 0}
 
 .top-controls{
   display:flex;
@@ -43,20 +27,17 @@ select,button{
 }
 
 button{cursor:pointer}
-button:disabled{opacity:.4;cursor:default}
+button:disabled{opacity:.4}
 
 .btn-undo{border-color:#b36b00;color:#ffb84d}
 .btn-reset{border-color:#6b2f2f;color:#e5a0a0}
 
-/* ✅ GRID BLINDADO */
 .players{
   display:grid;
-  grid-template-columns:repeat(2, minmax(0,1fr)); /* ✅ evita desborde */
+  grid-template-columns:repeat(2,1fr);
   grid-template-rows:repeat(3,1fr);
   height:calc(100vh - 200px);
-  width:100%;
-  padding:0 2px; /* margen mínimo */
-  overflow:hidden;
+  padding:0 2px;
 }
 
 .player{
@@ -65,7 +46,6 @@ button:disabled{opacity:.4;cursor:default}
   display:flex;
   flex-direction:column;
   transition:.3s;
-  min-width:0; /* ✅ CLAVE */
 }
 
 .player.disabled{opacity:.35;pointer-events:none}
@@ -86,7 +66,6 @@ button:disabled{opacity:.4;cursor:default}
   color:#fff;
   outline:none;
   text-transform:uppercase;
-  width:100%;
 }
 
 .entradas{
@@ -98,11 +77,7 @@ button:disabled{opacity:.4;cursor:default}
   border-radius:6px;
 }
 
-.divider{
-  height:1px;
-  background:#333;
-  margin:8px 0;
-}
+.divider{height:1px;background:#333;margin:8px 0}
 
 .score-zone{
   flex:1;
@@ -113,12 +88,7 @@ button:disabled{opacity:.4;cursor:default}
   cursor:pointer;
 }
 
-.score{
-  font-size:48px;
-  font-weight:bold;
-  word-break:break-word; /* seguridad */
-}
-
+.score{font-size:48px;font-weight:bold}
 .score.out{color:#e55353}
 
 .winner-label{
@@ -134,7 +104,6 @@ button:disabled{opacity:.4;cursor:default}
   padding:10px;
 }
 
-/* MODAL */
 .modal{
   position:fixed;
   inset:0;
@@ -242,14 +211,13 @@ function render(){
       </div>
     `;
 
-    const nameInput=d.querySelector(".name");
-    nameInput.onfocus=e=>e.target.select();
-    nameInput.oninput=e=>{
+    d.querySelector(".name").oninput=e=>{
       p.name=e.target.value.toUpperCase();save()
     };
 
     d.querySelector(".score-zone").onclick=()=>{
-      openScore(i)
+      if(state.winner!==null||p.disabled)return;
+      openScore(i);
     };
 
     playersDiv.appendChild(d);
@@ -312,7 +280,9 @@ function setEntry(i){
   if(isNaN(v))return;
   snapshot();
   const p=state.players[i];
-  p.score=v;p.out=false;p.disabled=false;
+  p.score=v;
+  p.out=false;
+  p.disabled=false;
   p.entradas=(p.entradas||0)+1;
   modal.style.display="none";
   save();render();
@@ -320,17 +290,23 @@ function setEntry(i){
 
 function reject(i){
   snapshot();
-  state.players[i].disabled=true;
-  state.players[i].out=true;
+  const p=state.players[i];
+  p.disabled=true;
+  p.out=true;
   modal.style.display="none";
-  checkState();save();render();
+  checkState();
+  save();render();
 }
 
 countSel.onchange=()=>{
   state.count=parseInt(countSel.value);
   state.players=[];
+  state.winner=null;
   for(let i=0;i<state.count;i++){
-    state.players.push({name:`NOMBRE ${i+1}`,score:0,entradas:0,disabled:false,out:false});
+    state.players.push({
+      name:`NOMBRE ${i+1}`,
+      score:0,entradas:0,disabled:false,out:false
+    });
   }
   save();render();
 };
