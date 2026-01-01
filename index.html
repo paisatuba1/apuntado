@@ -2,93 +2,104 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>APUNTADO</title>
+<title>APUNTADO PRO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <style>
-*{box-sizing:border-box;font-family:Arial,sans-serif}
-body{margin:0;background:#000;color:#fff;min-height:100vh;display:flex;flex-direction:column;}
-h1{text-align:center;letter-spacing:4px;margin:15px 0;font-size:24px;}
+/* Reset y Base */
+*{box-sizing:border-box;font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+body{margin:0;background:#000;color:#fff;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;}
 
+/* Tipografía y Títulos */
+h1{text-align:center;letter-spacing:4px;margin:15px 0;font-size:24px;color:#fff;}
+
+/* Controles Superiores */
 .top-controls{
-  display:flex;justify-content:center;gap:12px;
-  margin-bottom:10px;padding:0 10px;flex-wrap:wrap;
+  display:flex;justify-content:center;gap:10px;
+  margin-bottom:15px;padding:0 10px;
 }
 
-select,button{
-  background:#000;color:#fff;border:1px solid #333;
-  border-radius:6px;padding:8px 12px;font-size:16px;
+select, button{
+  background:#111;color:#fff;border:1px solid #333;
+  border-radius:8px;padding:10px;font-size:14px;transition: 0.2s;
 }
 
-button{cursor:pointer}
-button:disabled{opacity:.4}
+button:active{transform: scale(0.95);}
+button:disabled{opacity:0.2; transform: none;}
 
-.btn-undo{border-color:#b36b00;color:#ffb84d}
-.btn-reset{border-color:#6b2f2f;color:#e5a0a0}
-.btn-yes{border-color:#2f6b3f;color:#9be5b1}
-.btn-no{border-color:#6b2f2f;color:#e5a0a0}
+.btn-undo{border-color:#d4af37;color:#d4af37}
+.btn-reset{border-color:#e55353;color:#e55353}
 
+/* Rejilla de Jugadores */
 .players{
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:8px;padding:0 8px;flex:1;overflow:hidden;
+  display:grid;grid-template-columns: 1fr 1fr;
+  gap:10px;padding:0 10px 20px 10px;flex:1;
 }
 
 .player{
-  border:1px solid #222;padding:12px 8px;
-  display:flex;flex-direction:column;border-radius:8px;
+  border:1px solid #222;padding:15px 5px;
+  display:flex;flex-direction:column;border-radius:12px;
+  background: #050505; position: relative;
 }
 
-.player.disabled{opacity:.35;pointer-events:none}
-.player.winner{border:2px solid #d4af37}
+/* Estados Visuales */
+.player.disabled{opacity:0.25; filter: grayscale(1);}
+.player.winner{border:2px solid #d4af37; box-shadow: 0 0 15px rgba(212,175,55,0.3);}
+.player.winner .name{color: #d4af37; font-weight: 900;}
 
-.name-block{display:flex;flex-direction:column;align-items:center}
+.name-block{display:flex;flex-direction:column;align-items:center;min-height: 50px;}
 
 .name{
-  text-align:center;font-size:18px;font-weight:bold;
+  text-align:center;font-size:16px;font-weight:bold;
   background:transparent;border:none;color:#fff;
   outline:none;text-transform:uppercase;width:100%;
 }
 
 .entradas{
   margin-top:4px;background:#ffeb3b;color:#000;
-  font-size:14px;padding:2px 6px;border-radius:6px;
+  font-size:11px;padding:2px 8px;border-radius:4px;
+  font-weight: bold;
 }
 
-.divider{height:1px;background:#333;margin:8px 0}
+.divider{height:1px;background:#222;margin:10px 15% }
 
 .score-zone{
   flex:1;display:flex;flex-direction:column;
   justify-content:center;align-items:center;cursor:pointer;
 }
 
-.score{font-size:clamp(48px,10vw,72px);font-weight:bold}
+.score{font-size:clamp(40px, 12vw, 60px);font-weight:bold; transition: 0.3s;}
 .score.out{color:#e55353}
 
 .winner-label{
-  margin-top:6px;color:#d4af37;
+  margin-top:5px;color:#d4af37;font-size: 12px;
   font-weight:bold;letter-spacing:2px;
 }
 
+/* Modales */
 .modal{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.85);
-  display:none;align-items:center;justify-content:center;
-  z-index:100;
+  position:fixed;inset:0;background:rgba(0,0,0,0.9);
+  display:none;align-items:center;justify-content:center;z-index:100;
 }
 
 .modal-box{
-  background:#111;padding:20px;border-radius:10px;
-  text-align:center;width:90%;max-width:300px;
+  background:#111;padding:25px;border-radius:15px;
+  text-align:center;width:85%;max-width:320px;border: 1px solid #333;
 }
 
+#modalText{margin-bottom: 15px; font-size: 18px; line-height: 1.4;}
+
 .modal-box input{
-  width:100%;padding:12px;font-size:22px;
+  width:100%;padding:15px;font-size:24px;
   text-align:center;background:#000;color:#fff;
-  border:1px solid #333;margin-bottom:12px;
+  border:1px solid #444;margin-bottom:20px; border-radius: 10px;
 }
 
 .modal-actions{display:flex;gap:10px}
-.modal-actions button{flex:1}
+.modal-actions button{flex:1; padding: 15px; font-weight: bold;}
+
+.btn-yes{background:#1b4332; color:#95d5b2; border-color:#2d6a4f}
+.btn-no{background:#431b1b; color:#e5a0a0; border-color:#6b2f2f}
 </style>
 </head>
 
@@ -98,13 +109,12 @@ button:disabled{opacity:.4}
 
 <div class="top-controls">
   <select id="count">
-    <option value="">Jugadores</option>
+    <option value="0">Jugadores</option>
     <option value="2">2</option><option value="3">3</option>
     <option value="4">4</option><option value="5">5</option>
     <option value="6">6</option>
   </select>
-
-  <button class="btn-undo" id="undo" disabled>DESHACER</button>
+  <button class="btn-undo" id="undo" onclick="undo()">DESHACER</button>
   <button class="btn-reset" onclick="resetGame()">REINICIAR</button>
 </div>
 
@@ -113,181 +123,211 @@ button:disabled{opacity:.4}
 <div class="modal" id="modal">
   <div class="modal-box">
     <div id="modalText"></div>
-    <input id="modalInput" type="text" inputmode="numeric">
+    <input id="modalInput" type="number" inputmode="numeric" pattern="[0-9]*">
     <div class="modal-actions" id="modalActions"></div>
   </div>
 </div>
 
 <script>
-let modalOpen=false;
-
-let state=JSON.parse(localStorage.getItem("apuntado"))||{
-  count:0,players:[],history:[],winner:null
+// --- ESTADO ---
+let state = JSON.parse(localStorage.getItem("apuntado_v2")) || {
+  players: [],
+  history: [],
+  winner: null
 };
 
-const playersDiv=document.getElementById("players");
-const countSel=document.getElementById("count");
-const undoBtn=document.getElementById("undo");
-const modal=document.getElementById("modal");
-const modalText=document.getElementById("modalText");
-const modalInput=document.getElementById("modalInput");
-const modalActions=document.getElementById("modalActions");
+// --- SELECTORES ---
+const playersDiv = document.getElementById("players");
+const countSel = document.getElementById("count");
+const undoBtn = document.getElementById("undo");
+const modal = document.getElementById("modal");
+const modalText = document.getElementById("modalText");
+const modalInput = document.getElementById("modalInput");
+const modalActions = document.getElementById("modalActions");
 
-function save(){localStorage.setItem("apuntado",JSON.stringify(state))}
-function snapshot(){state.history.push(JSON.stringify(state));undoBtn.disabled=false}
+// --- LÓGICA DE PERSISTENCIA ---
+function save() {
+  localStorage.setItem("apuntado_v2", JSON.stringify(state));
+  undoBtn.disabled = state.history.length === 0;
+}
 
-function openModal(){modalOpen=true;modal.style.display="flex"}
-function closeModal(){modalOpen=false;modal.style.display="none"}
+function snapshot() {
+  // Guardamos solo los datos relevantes para no saturar memoria
+  const dataClone = JSON.stringify({
+    players: state.players,
+    winner: state.winner
+  });
+  state.history.push(dataClone);
+  if(state.history.length > 20) state.history.shift(); // Límite de 20 deshacer
+}
 
-function render(){
-  playersDiv.innerHTML="";
-  if(!state.count)return;
+// --- MODAL ENGINE ---
+function showModal(text, showInput, actionsHtml) {
+  modalText.textContent = text;
+  modalInput.value = "";
+  modalInput.style.display = showInput ? "block" : "none";
+  modalActions.innerHTML = actionsHtml;
+  modal.style.display = "flex";
+  if(showInput) setTimeout(() => modalInput.focus(), 100);
+}
 
-  state.players.forEach((p,i)=>{
-    const d=document.createElement("div");
-    d.className="player";
-    if(state.winner!==null){
-      if(i===state.winner)d.classList.add("winner");
-      else d.classList.add("disabled");
-    }else if(p.disabled)d.classList.add("disabled");
+function closeModal() {
+  modal.style.display = "none";
+}
 
-    d.innerHTML=`
+// --- FLUJO DE JUEGO ---
+function render() {
+  playersDiv.innerHTML = "";
+  state.players.forEach((p, i) => {
+    const card = document.createElement("div");
+    card.className = `player ${p.disabled ? 'disabled' : ''} ${state.winner === i ? 'winner' : ''}`;
+    
+    card.innerHTML = `
       <div class="name-block">
-        <input class="name" value="${p.name}">
-        ${p.entradas>0?`<div class="entradas">ENTRADAS: ${p.entradas}</div>`:""}
+        <input class="name" value="${p.name}" ${state.winner !== null ? 'disabled' : ''}>
+        ${p.entradas > 0 ? `<div class="entradas">ENTRADAS: ${p.entradas}</div>` : ""}
       </div>
       <div class="divider"></div>
       <div class="score-zone">
-        <div class="score ${p.out?"out":""}">${p.score}</div>
-        ${state.winner===i?'<div class="winner-label">GANADOR</div>':""}
+        <div class="score ${p.score >= 101 ? 'out' : ''}">${p.score}</div>
+        ${state.winner === i ? '<div class="winner-label">GANADOR</div>' : ""}
       </div>
     `;
 
-    const nameInput=d.querySelector(".name");
-    nameInput.oninput=e=>{p.name=e.target.value.toUpperCase();save()}
-    nameInput.addEventListener("focus",()=>nameInput.select());
-    d.querySelector(".score-zone").onclick=()=>openScore(i);
-    playersDiv.appendChild(d);
+    // Eventos de nombre
+    const nInput = card.querySelector(".name");
+    nInput.onchange = (e) => { 
+      p.name = e.target.value.toUpperCase(); 
+      save(); 
+    };
+    nInput.onfocus = () => nInput.select();
+
+    // Evento de puntos
+    card.querySelector(".score-zone").onclick = () => {
+      if(state.winner === null && !p.disabled) openScoreModal(i);
+    };
+
+    playersDiv.appendChild(card);
   });
+  undoBtn.disabled = state.history.length === 0;
 }
 
-function openScore(i){
-  modalText.textContent="Puntos";
-  modalInput.value="";
-  modalInput.style.display="block";
-  modalActions.innerHTML=`
-    <button onclick="apply(${i},1)">SUMAR</button>
-    <button onclick="apply(${i},-1)">RESTAR</button>
-  `;
-  openModal();setTimeout(()=>modalInput.focus(),150);
+function openScoreModal(i) {
+  showModal(`Puntos para ${state.players[i].name}`, true, `
+    <button onclick="applyScore(${i}, 1)">SUMAR</button>
+    <button onclick="applyScore(${i}, -1)" style="border-color:#6b2f2f">RESTAR</button>
+  `);
 }
 
-function apply(i,m){
-  const v=parseInt(modalInput.value);
-  if(isNaN(v))return;
+function applyScore(i, multiplier) {
+  const val = parseInt(modalInput.value);
+  if (isNaN(val)) return;
+  
   snapshot();
-  state.players[i].score+=v*m;
+  state.players[i].score += (val * multiplier);
   closeModal();
-  checkState();
-  save();render();
+  checkGameLogic();
 }
 
-function checkState(){
-  if(modalOpen)return;
-
-  let newWinner=null;
-  state.players.forEach((p,i)=>{
-    if(!p.disabled&&p.score<=-51)newWinner=i;
-  });
-
-  if(newWinner!==null){
-    state.winner=newWinner;
-    save();render();return;
+function checkGameLogic() {
+  // 1. Prioridad: Victoria por puntos negativos (-51)
+  const luckyWinner = state.players.findIndex(p => !p.disabled && p.score <= -51);
+  if (luckyWinner !== -1) {
+    state.winner = luckyWinner;
+    finalizeGame();
+    return;
   }
 
-  state.players.forEach((p,i)=>{
-    if(!p.disabled&&p.score>=101&&!p.reentryLock){
-      p.reentryLock=true;
-      askReentry(i);
-    }
-  });
+  // 2. Condición de Salida (101 puntos)
+  const pendingReentry = state.players.findIndex(p => !p.disabled && p.score >= 101);
+  if (pendingReentry !== -1) {
+    askReentry(pendingReentry);
+    return;
+  }
 
-  const active=state.players.filter(p=>!p.disabled).length;
-  if(active===1&&state.winner===null){
-    state.winner=state.players.findIndex(p=>!p.disabled);
-    save();render();
+  // 3. Victoria por eliminación (Queda solo uno)
+  const actives = state.players.filter(p => !p.disabled);
+  if (actives.length === 1) {
+    state.winner = state.players.findIndex(p => !p.disabled);
+  }
+
+  save();
+  render();
+}
+
+function askReentry(i) {
+  showModal(`${state.players[i].name} llegó a ${state.players[i].score}. ¿Desea reingresar?`, false, `
+    <button class="btn-yes" onclick="prepareReentry(${i})">SÍ</button>
+    <button class="btn-no" onclick="eliminatePlayer(${i})">NO</button>
+  `);
+}
+
+function prepareReentry(i) {
+  showModal("¿Con cuántos puntos entra?", true, `
+    <button class="btn-yes" onclick="executeReentry(${i})">ENTRAR</button>
+  `);
+}
+
+function executeReentry(i) {
+  const val = parseInt(modalInput.value);
+  if (isNaN(val)) return;
+  state.players[i].score = val;
+  state.players[i].entradas++;
+  closeModal();
+  checkGameLogic(); // Volver a chequear por si otros deben reingresar
+}
+
+function eliminatePlayer(i) {
+  state.players[i].disabled = true;
+  closeModal();
+  checkGameLogic();
+}
+
+function finalizeGame() {
+  save();
+  render();
+}
+
+function undo() {
+  if (state.history.length === 0) return;
+  const lastState = JSON.parse(state.history.pop());
+  state.players = lastState.players;
+  state.winner = lastState.winner;
+  save();
+  render();
+}
+
+function resetGame() {
+  if (confirm("¿Seguro que quieres borrar la partida actual?")) {
+    state = { players: [], history: [], winner: null };
+    localStorage.removeItem("apuntado_v2");
+    countSel.value = "0";
+    render();
   }
 }
 
-function askReentry(i){
-  modalText.textContent=`${state.players[i].name} ¿Desea ingresar nuevamente?`;
-  modalInput.style.display="none";
-  modalActions.innerHTML=`
-    <button class="btn-yes" onclick="reenter(${i})">SÍ</button>
-    <button class="btn-no" onclick="reject(${i})">NO</button>
-  `;
-  openModal();
-}
-
-function reenter(i){
-  modalText.textContent="¿Con cuántos puntos entra?";
-  modalInput.style.display="block";
-  modalInput.value="";
-  modalActions.innerHTML=`
-    <button class="btn-yes" onclick="setEntry(${i})">ENTRAR</button>
-  `;
-  setTimeout(()=>modalInput.focus(),150);
-}
-
-function setEntry(i){
-  const v=parseInt(modalInput.value);
-  if(isNaN(v))return;
-  snapshot();
-  const p=state.players[i];
-  p.score=v;p.disabled=false;p.out=false;
-  p.entradas=(p.entradas||0)+1;
-  p.reentryLock=false;
-  closeModal();
-  save();render();
-}
-
-function reject(i){
-  snapshot();
-  const p=state.players[i];
-  p.disabled=true;p.out=true;p.reentryLock=false;
-  closeModal();
-  save();render();
-  checkState();
-}
-
-countSel.onchange=()=>{
-  state.count=parseInt(countSel.value);
-  state.players=[];state.history=[];state.winner=null;
-  for(let i=0;i<state.count;i++){
-    state.players.push({
-      name:`NOMBRE ${i+1}`,
-      score:0,entradas:0,
-      disabled:false,out:false,reentryLock:false
-    });
-  }
-  save();render();
+// --- INICIALIZACIÓN ---
+countSel.onchange = () => {
+  const num = parseInt(countSel.value);
+  if (num < 2) return;
+  
+  state.players = Array.from({length: num}, (_, i) => ({
+    name: `NOMBRE ${i + 1}`,
+    score: 0,
+    entradas: 0,
+    disabled: false
+  }));
+  state.winner = null;
+  state.history = [];
+  save();
+  render();
 };
 
-undoBtn.onclick=()=>{
-  if(!state.history.length)return;
-  state=JSON.parse(state.history.pop());
-  undoBtn.disabled=!state.history.length;
-  save();render();
-};
-
-function resetGame(){
-  if(confirm("¿Reiniciar juego?")){
-    localStorage.removeItem("apuntado");
-    location.reload();
-  }
+// Render inicial
+if(state.players.length > 0) {
+    countSel.value = state.players.length;
+    render();
 }
-
-render();
 </script>
 </body>
 </html>
