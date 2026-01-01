@@ -8,29 +8,20 @@
 <style>
 *{box-sizing:border-box;font-family:Arial,sans-serif}
 body{margin:0;background:#000;color:#fff;min-height:100vh;display:flex;flex-direction:column;}
-
 h1{text-align:center;letter-spacing:4px;margin:15px 0;font-size:24px;}
 
 .top-controls{
-  display:flex;
-  justify-content:center;
-  gap:12px;
-  margin-bottom:10px;
-  padding:0 10px;
-  flex-wrap:wrap;
+  display:flex;justify-content:center;gap:12px;
+  margin-bottom:10px;padding:0 10px;flex-wrap:wrap;
 }
 
 select,button{
-  background:#000;
-  color:#fff;
-  border:1px solid #333;
-  border-radius:6px;
-  padding:8px 12px;
-  font-size:16px;
+  background:#000;color:#fff;border:1px solid #333;
+  border-radius:6px;padding:8px 12px;font-size:16px;
 }
 
 button{cursor:pointer}
-button:disabled{opacity:.4;cursor:default}
+button:disabled{opacity:.4}
 
 .btn-undo{border-color:#b36b00;color:#ffb84d}
 .btn-reset{border-color:#6b2f2f;color:#e5a0a0}
@@ -38,112 +29,65 @@ button:disabled{opacity:.4;cursor:default}
 .btn-no{border-color:#6b2f2f;color:#e5a0a0}
 
 .players{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  padding:0 8px;
-  flex:1;
-  overflow:hidden;
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:8px;padding:0 8px;flex:1;overflow:hidden;
 }
 
 .player{
-  border:1px solid #222;
-  padding:12px 8px;
-  display:flex;
-  flex-direction:column;
-  border-radius:8px;
+  border:1px solid #222;padding:12px 8px;
+  display:flex;flex-direction:column;border-radius:8px;
 }
 
 .player.disabled{opacity:.35;pointer-events:none}
 .player.winner{border:2px solid #d4af37}
 
-.name-block{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-}
+.name-block{display:flex;flex-direction:column;align-items:center}
 
 .name{
-  text-align:center;
-  font-size:18px;
-  font-weight:bold;
-  background:transparent;
-  border:none;
-  color:#fff;
-  outline:none;
-  text-transform:uppercase;
-  width:100%;
+  text-align:center;font-size:18px;font-weight:bold;
+  background:transparent;border:none;color:#fff;
+  outline:none;text-transform:uppercase;width:100%;
 }
 
 .entradas{
-  margin-top:4px;
-  background:#ffeb3b;
-  color:#000;
-  font-size:14px;
-  padding:2px 6px;
-  border-radius:6px;
+  margin-top:4px;background:#ffeb3b;color:#000;
+  font-size:14px;padding:2px 6px;border-radius:6px;
 }
 
 .divider{height:1px;background:#333;margin:8px 0}
 
 .score-zone{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  cursor:pointer;
+  flex:1;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;cursor:pointer;
 }
 
-.score{
-  font-size:clamp(48px, 10vw, 72px);
-  font-weight:bold;
-}
-
+.score{font-size:clamp(48px,10vw,72px);font-weight:bold}
 .score.out{color:#e55353}
 
 .winner-label{
-  margin-top:6px;
-  color:#d4af37;
-  font-weight:bold;
-  letter-spacing:2px;
+  margin-top:6px;color:#d4af37;
+  font-weight:bold;letter-spacing:2px;
 }
 
 .modal{
-  position:fixed;
-  inset:0;
+  position:fixed;inset:0;
   background:rgba(0,0,0,.85);
-  display:none;
-  align-items:center;
-  justify-content:center;
+  display:none;align-items:center;justify-content:center;
   z-index:100;
 }
 
 .modal-box{
-  background:#111;
-  padding:20px;
-  border-radius:10px;
-  text-align:center;
-  width:90%;
-  max-width:300px;
+  background:#111;padding:20px;border-radius:10px;
+  text-align:center;width:90%;max-width:300px;
 }
 
 .modal-box input{
-  width:100%;
-  padding:12px;
-  font-size:22px;
-  text-align:center;
-  background:#000;
-  color:#fff;
-  border:1px solid #333;
-  margin-bottom:12px;
+  width:100%;padding:12px;font-size:22px;
+  text-align:center;background:#000;color:#fff;
+  border:1px solid #333;margin-bottom:12px;
 }
 
-.modal-actions{
-  display:flex;
-  gap:10px;
-}
-
+.modal-actions{display:flex;gap:10px}
 .modal-actions button{flex:1}
 </style>
 </head>
@@ -161,7 +105,6 @@ button:disabled{opacity:.4;cursor:default}
   </select>
 
   <button class="btn-undo" id="undo" disabled>DESHACER</button>
-
   <button class="btn-reset" onclick="resetGame()">REINICIAR</button>
 </div>
 
@@ -170,14 +113,16 @@ button:disabled{opacity:.4;cursor:default}
 <div class="modal" id="modal">
   <div class="modal-box">
     <div id="modalText"></div>
-    <input id="modalInput" type="text" inputmode="numeric" pattern="[0-9]*">
+    <input id="modalInput" type="text" inputmode="numeric">
     <div class="modal-actions" id="modalActions"></div>
   </div>
 </div>
 
 <script>
-let state = JSON.parse(localStorage.getItem("apuntado")) || {
-  count:0, players:[], history:[], winner:null
+let modalOpen=false;
+
+let state=JSON.parse(localStorage.getItem("apuntado"))||{
+  count:0,players:[],history:[],winner:null
 };
 
 const playersDiv=document.getElementById("players");
@@ -190,6 +135,9 @@ const modalActions=document.getElementById("modalActions");
 
 function save(){localStorage.setItem("apuntado",JSON.stringify(state))}
 function snapshot(){state.history.push(JSON.stringify(state));undoBtn.disabled=false}
+
+function openModal(){modalOpen=true;modal.style.display="flex"}
+function closeModal(){modalOpen=false;modal.style.display="none"}
 
 function render(){
   playersDiv.innerHTML="";
@@ -218,7 +166,6 @@ function render(){
     const nameInput=d.querySelector(".name");
     nameInput.oninput=e=>{p.name=e.target.value.toUpperCase();save()}
     nameInput.addEventListener("focus",()=>nameInput.select());
-
     d.querySelector(".score-zone").onclick=()=>openScore(i);
     playersDiv.appendChild(d);
   });
@@ -228,12 +175,11 @@ function openScore(i){
   modalText.textContent="Puntos";
   modalInput.value="";
   modalInput.style.display="block";
-  modal.style.display="flex";
-  setTimeout(()=>modalInput.focus(),150);
   modalActions.innerHTML=`
     <button onclick="apply(${i},1)">SUMAR</button>
     <button onclick="apply(${i},-1)">RESTAR</button>
   `;
+  openModal();setTimeout(()=>modalInput.focus(),150);
 }
 
 function apply(i,m){
@@ -241,33 +187,33 @@ function apply(i,m){
   if(isNaN(v))return;
   snapshot();
   state.players[i].score+=v*m;
-  modal.style.display="none";
+  closeModal();
   checkState();
   save();render();
 }
 
 function checkState(){
-  let newWinner=null;
+  if(modalOpen)return;
 
+  let newWinner=null;
   state.players.forEach((p,i)=>{
-    if(!p.disabled && p.score<=-51)newWinner=i;
+    if(!p.disabled&&p.score<=-51)newWinner=i;
   });
 
   if(newWinner!==null){
     state.winner=newWinner;
-    save();render();
-    return;
+    save();render();return;
   }
 
   state.players.forEach((p,i)=>{
-    if(!p.disabled && p.score>=101 && !p.reentryLock){
+    if(!p.disabled&&p.score>=101&&!p.reentryLock){
       p.reentryLock=true;
       askReentry(i);
     }
   });
 
   const active=state.players.filter(p=>!p.disabled).length;
-  if(active===1 && state.winner===null){
+  if(active===1&&state.winner===null){
     state.winner=state.players.findIndex(p=>!p.disabled);
     save();render();
   }
@@ -280,17 +226,17 @@ function askReentry(i){
     <button class="btn-yes" onclick="reenter(${i})">SÍ</button>
     <button class="btn-no" onclick="reject(${i})">NO</button>
   `;
-  modal.style.display="flex";
+  openModal();
 }
 
 function reenter(i){
   modalText.textContent="¿Con cuántos puntos entra?";
   modalInput.style.display="block";
   modalInput.value="";
-  setTimeout(()=>modalInput.focus(),150);
   modalActions.innerHTML=`
     <button class="btn-yes" onclick="setEntry(${i})">ENTRAR</button>
   `;
+  setTimeout(()=>modalInput.focus(),150);
 }
 
 function setEntry(i){
@@ -298,39 +244,30 @@ function setEntry(i){
   if(isNaN(v))return;
   snapshot();
   const p=state.players[i];
-  p.score=v;
-  p.disabled=false;
-  p.out=false;
+  p.score=v;p.disabled=false;p.out=false;
   p.entradas=(p.entradas||0)+1;
   p.reentryLock=false;
-  modal.style.display="none";
+  closeModal();
   save();render();
 }
 
 function reject(i){
   snapshot();
   const p=state.players[i];
-  p.disabled=true;
-  p.out=true;
-  p.reentryLock=false;
-  modal.style.display="none";
+  p.disabled=true;p.out=true;p.reentryLock=false;
+  closeModal();
   save();render();
   checkState();
 }
 
 countSel.onchange=()=>{
   state.count=parseInt(countSel.value);
-  state.players=[];
-  state.history=[];
-  state.winner=null;
+  state.players=[];state.history=[];state.winner=null;
   for(let i=0;i<state.count;i++){
     state.players.push({
       name:`NOMBRE ${i+1}`,
-      score:0,
-      entradas:0,
-      disabled:false,
-      out:false,
-      reentryLock:false
+      score:0,entradas:0,
+      disabled:false,out:false,reentryLock:false
     });
   }
   save();render();
