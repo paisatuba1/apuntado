@@ -38,7 +38,7 @@ button:disabled{opacity:.4;cursor:default}
   display:grid;
   grid-template-columns:1fr 1fr; /* Siempre 2 columnas */
   gap:8px;
-  padding:0 8px; /* Margen de seguridad lateral */
+  padding:0 8px;
   flex:1;
   max-height:calc(100vh - 180px);
   overflow:hidden;
@@ -95,7 +95,7 @@ button:disabled{opacity:.4;cursor:default}
 }
 
 .score{
-  font-size:clamp(48px, 10vw, 72px); /* Entre 48px y 72px */
+  font-size:clamp(48px, 10vw, 72px);
   font-weight:bold;
 }
 
@@ -186,7 +186,7 @@ button:disabled{opacity:.4;cursor:default}
 <div class="modal" id="modal">
   <div class="modal-box">
     <div id="modalText"></div>
-    <input id="modalInput" type="number" inputmode="decimal">
+    <input id="modalInput" type="text" inputmode="numeric" pattern="[0-9]*">
     <div class="modal-actions" id="modalActions"></div>
   </div>
 </div>
@@ -248,7 +248,7 @@ function openScore(i){
   modalInput.value="";
   modal.style.display="flex";
   modalInput.style.display="block";
-  setTimeout(()=>modalInput.focus(),100); // Mejor foco en móviles
+  setTimeout(()=>modalInput.focus(),200); // Da tiempo al modal y abre teclado numérico automáticamente
   modalActions.innerHTML=`
     <button onclick="apply(${i},1)">SUMAR</button>
     <button onclick="apply(${i},-1)">RESTAR</button>
@@ -295,7 +295,7 @@ function reenter(i){
   modalText.textContent="¿Con cuántos puntos entra?";
   modalInput.style.display="block";
   modalInput.value="";
-  setTimeout(()=>modalInput.focus(),100);
+  setTimeout(()=>modalInput.focus(),200); // Aquí también: teclado numérico automático
   modalActions.innerHTML=`
     <button class="btn-yes" onclick="setEntry(${i})">ENTRAR</button>
   `;
