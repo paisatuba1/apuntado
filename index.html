@@ -6,36 +6,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <style>
-/* Estilos mantenidos exactamente igual */
+/* Estilos Base */
 *{box-sizing:border-box;font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
 body{margin:0;background:#000;color:#fff;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;}
 h1{text-align:center;letter-spacing:4px;margin:15px 0;font-size:24px;color:#fff;}
 
+/* Controles Superiores - Simplificados */
 .top-controls{
-  display:flex;justify-content:center;gap:10px;
+  display:flex;justify-content:center;gap:15px;
   margin-bottom:15px;padding:0 10px;
 }
 
 select, button{
   background:#111;color:#fff;border:1px solid #333;
-  border-radius:8px;padding:10px;font-size:14px;transition: 0.2s;
+  border-radius:8px;padding:12px;font-size:14px;transition: 0.2s;
 }
 
 button:active{transform: scale(0.95);}
 button:disabled{opacity:0.2; transform: none;}
 
 .btn-undo{border-color:#d4af37;color:#d4af37}
-.btn-reset{border-color:#e55353;color:#e55353}
 
+/* Rejilla de Jugadores con Tamaño Fijo */
 .players{
   display:grid;grid-template-columns: 1fr 1fr;
   gap:10px;padding:0 10px 20px 10px;flex:1;
+  align-content: start; /* Evita que las filas se estiren para llenar el espacio */
 }
 
 .player{
   border:1px solid #222;padding:15px 5px;
   display:flex;flex-direction:column;border-radius:12px;
   background: #050505; position: relative;
+  /* Altura fija para que siempre se vean igual */
+  height: 200px; 
 }
 
 .player.disabled{opacity:0.25; filter: grayscale(1);}
@@ -63,7 +67,7 @@ button:disabled{opacity:0.2; transform: none;}
   justify-content:center;align-items:center;cursor:pointer;
 }
 
-.score{font-size:clamp(40px, 12vw, 60px);font-weight:bold; transition: 0.3s;}
+.score{font-size: 50px; font-weight:bold; transition: 0.3s;}
 .score.out{color:#e55353}
 
 .winner-label{
@@ -71,6 +75,7 @@ button:disabled{opacity:0.2; transform: none;}
   font-weight:bold;letter-spacing:2px;
 }
 
+/* Modales */
 .modal{
   position:fixed;inset:0;background:rgba(0,0,0,0.9);
   display:none;align-items:center;justify-content:center;z-index:100;
@@ -109,7 +114,6 @@ button:disabled{opacity:0.2; transform: none;}
     <option value="6">6</option>
   </select>
   <button class="btn-undo" id="undo" onclick="undo()" disabled>DESHACER</button>
-  <button class="btn-reset" onclick="resetGame()">REINICIAR</button>
 </div>
 
 <div class="players" id="players"></div>
@@ -166,7 +170,6 @@ function closeModal() {
 
 function render() {
   playersDiv.innerHTML = "";
-  // Si no hay jugadores, no renderizamos nada (Pantalla de inicio limpia)
   if (state.players.length === 0) return;
 
   state.players.forEach((p, i) => {
@@ -240,7 +243,7 @@ function checkGameLogic() {
 }
 
 function askReentry(i) {
-  showModal(`${state.players[i].name} llegó a ${state.players[i].score}. ¿Desea reingresar?`, false, `
+  showModal(`${state.players[i].name} ¿Desea reingresar?`, false, `
     <button class="btn-yes" onclick="prepareReentry(${i})">SÍ</button>
     <button class="btn-no" onclick="eliminatePlayer(${i})">NO</button>
   `);
@@ -276,22 +279,11 @@ function undo() {
   render();
 }
 
-function resetGame() {
-  if (confirm("¿Reiniciar juego? Se perderán todos los datos.")) {
-    state = { players: [], history: [], winner: null };
-    localStorage.removeItem("apuntado_v2");
-    countSel.value = "0";
-    render();
-  }
-}
-
-// Lógica del selector con confirmación y opción INICIO
 countSel.onchange = () => {
   const num = parseInt(countSel.value);
   
-  // Si se selecciona INICIO (0) o se intenta cambiar el número durante el juego
   if (state.players.length > 0) {
-    if (!confirm("¿Cambiar configuración? Esto reiniciará la partida actual.")) {
+    if (!confirm("¿Seguro que quieres cambiar la partida? Esto borrará el progreso actual.")) {
       countSel.value = state.players.length || "0";
       return;
     }
