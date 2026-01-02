@@ -6,14 +6,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <style>
-/* Reset y Base */
+/* Estilos mantenidos exactamente igual */
 *{box-sizing:border-box;font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
 body{margin:0;background:#000;color:#fff;min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;}
-
-/* Tipografía y Títulos */
 h1{text-align:center;letter-spacing:4px;margin:15px 0;font-size:24px;color:#fff;}
 
-/* Controles Superiores */
 .top-controls{
   display:flex;justify-content:center;gap:10px;
   margin-bottom:15px;padding:0 10px;
@@ -30,7 +27,6 @@ button:disabled{opacity:0.2; transform: none;}
 .btn-undo{border-color:#d4af37;color:#d4af37}
 .btn-reset{border-color:#e55353;color:#e55353}
 
-/* Rejilla de Jugadores */
 .players{
   display:grid;grid-template-columns: 1fr 1fr;
   gap:10px;padding:0 10px 20px 10px;flex:1;
@@ -42,7 +38,6 @@ button:disabled{opacity:0.2; transform: none;}
   background: #050505; position: relative;
 }
 
-/* Estados Visuales */
 .player.disabled{opacity:0.25; filter: grayscale(1);}
 .player.winner{border:2px solid #d4af37; box-shadow: 0 0 15px rgba(212,175,55,0.3);}
 .player.winner .name{color: #d4af37; font-weight: 900;}
@@ -76,7 +71,6 @@ button:disabled{opacity:0.2; transform: none;}
   font-weight:bold;letter-spacing:2px;
 }
 
-/* Modales */
 .modal{
   position:fixed;inset:0;background:rgba(0,0,0,0.9);
   display:none;align-items:center;justify-content:center;z-index:100;
@@ -109,12 +103,12 @@ button:disabled{opacity:0.2; transform: none;}
 
 <div class="top-controls">
   <select id="count">
-    <option value="0">Jugadores</option>
+    <option value="0">INICIO</option>
     <option value="2">2</option><option value="3">3</option>
     <option value="4">4</option><option value="5">5</option>
     <option value="6">6</option>
   </select>
-  <button class="btn-undo" id="undo" onclick="undo()">DESHACER</button>
+  <button class="btn-undo" id="undo" onclick="undo()" disabled>DESHACER</button>
   <button class="btn-reset" onclick="resetGame()">REINICIAR</button>
 </div>
 
@@ -129,14 +123,12 @@ button:disabled{opacity:0.2; transform: none;}
 </div>
 
 <script>
-// --- ESTADO ---
 let state = JSON.parse(localStorage.getItem("apuntado_v2")) || {
   players: [],
   history: [],
   winner: null
 };
 
-// --- SELECTORES ---
 const playersDiv = document.getElementById("players");
 const countSel = document.getElementById("count");
 const undoBtn = document.getElementById("undo");
@@ -145,23 +137,20 @@ const modalText = document.getElementById("modalText");
 const modalInput = document.getElementById("modalInput");
 const modalActions = document.getElementById("modalActions");
 
-// --- LÓGICA DE PERSISTENCIA ---
 function save() {
   localStorage.setItem("apuntado_v2", JSON.stringify(state));
   undoBtn.disabled = state.history.length === 0;
 }
 
 function snapshot() {
-  // Guardamos solo los datos relevantes para no saturar memoria
   const dataClone = JSON.stringify({
     players: state.players,
     winner: state.winner
   });
   state.history.push(dataClone);
-  if(state.history.length > 20) state.history.shift(); // Límite de 20 deshacer
+  if(state.history.length > 20) state.history.shift();
 }
 
-// --- MODAL ENGINE ---
 function showModal(text, showInput, actionsHtml) {
   modalText.textContent = text;
   modalInput.value = "";
@@ -175,9 +164,11 @@ function closeModal() {
   modal.style.display = "none";
 }
 
-// --- FLUJO DE JUEGO ---
 function render() {
   playersDiv.innerHTML = "";
+  // Si no hay jugadores, no renderizamos nada (Pantalla de inicio limpia)
+  if (state.players.length === 0) return;
+
   state.players.forEach((p, i) => {
     const card = document.createElement("div");
     card.className = `player ${p.disabled ? 'disabled' : ''} ${state.winner === i ? 'winner' : ''}`;
@@ -194,7 +185,6 @@ function render() {
       </div>
     `;
 
-    // Eventos de nombre
     const nInput = card.querySelector(".name");
     nInput.onchange = (e) => { 
       p.name = e.target.value.toUpperCase(); 
@@ -202,7 +192,6 @@ function render() {
     };
     nInput.onfocus = () => nInput.select();
 
-    // Evento de puntos
     card.querySelector(".score-zone").onclick = () => {
       if(state.winner === null && !p.disabled) openScoreModal(i);
     };
@@ -222,7 +211,6 @@ function openScoreModal(i) {
 function applyScore(i, multiplier) {
   const val = parseInt(modalInput.value);
   if (isNaN(val)) return;
-  
   snapshot();
   state.players[i].score += (val * multiplier);
   closeModal();
@@ -230,24 +218,20 @@ function applyScore(i, multiplier) {
 }
 
 function checkGameLogic() {
-  // 1. Prioridad: Victoria por puntos negativos (-51)
   const luckyWinner = state.players.findIndex(p => !p.disabled && p.score <= -51);
   if (luckyWinner !== -1) {
     state.winner = luckyWinner;
-    finalizeGame();
-    return;
+    save(); render(); return;
   }
 
-  // 2. Condición de Salida (101 puntos)
   const pendingReentry = state.players.findIndex(p => !p.disabled && p.score >= 101);
   if (pendingReentry !== -1) {
     askReentry(pendingReentry);
     return;
   }
 
-  // 3. Victoria por eliminación (Queda solo uno)
   const actives = state.players.filter(p => !p.disabled);
-  if (actives.length === 1) {
+  if (actives.length === 1 && state.players.length > 0) {
     state.winner = state.players.findIndex(p => !p.disabled);
   }
 
@@ -274,18 +258,13 @@ function executeReentry(i) {
   state.players[i].score = val;
   state.players[i].entradas++;
   closeModal();
-  checkGameLogic(); // Volver a chequear por si otros deben reingresar
+  checkGameLogic();
 }
 
 function eliminatePlayer(i) {
   state.players[i].disabled = true;
   closeModal();
   checkGameLogic();
-}
-
-function finalizeGame() {
-  save();
-  render();
 }
 
 function undo() {
@@ -298,7 +277,7 @@ function undo() {
 }
 
 function resetGame() {
-  if (confirm("¿Seguro que quieres borrar la partida actual?")) {
+  if (confirm("¿Reiniciar juego? Se perderán todos los datos.")) {
     state = { players: [], history: [], winner: null };
     localStorage.removeItem("apuntado_v2");
     countSel.value = "0";
@@ -306,28 +285,42 @@ function resetGame() {
   }
 }
 
-// --- INICIALIZACIÓN ---
+// Lógica del selector con confirmación y opción INICIO
 countSel.onchange = () => {
   const num = parseInt(countSel.value);
-  if (num < 2) return;
   
-  state.players = Array.from({length: num}, (_, i) => ({
-    name: `NOMBRE ${i + 1}`,
-    score: 0,
-    entradas: 0,
-    disabled: false
-  }));
-  state.winner = null;
-  state.history = [];
+  // Si se selecciona INICIO (0) o se intenta cambiar el número durante el juego
+  if (state.players.length > 0) {
+    if (!confirm("¿Cambiar configuración? Esto reiniciará la partida actual.")) {
+      countSel.value = state.players.length || "0";
+      return;
+    }
+  }
+
+  if (num === 0) {
+    state = { players: [], history: [], winner: null };
+    localStorage.removeItem("apuntado_v2");
+  } else {
+    state.players = Array.from({length: num}, (_, i) => ({
+      name: `NOMBRE ${i + 1}`,
+      score: 0,
+      entradas: 0,
+      disabled: false
+    }));
+    state.winner = null;
+    state.history = [];
+  }
+  
   save();
   render();
 };
 
-// Render inicial
 if(state.players.length > 0) {
     countSel.value = state.players.length;
-    render();
+} else {
+    countSel.value = "0";
 }
+render();
 </script>
 </body>
 </html>
